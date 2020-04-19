@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>RocketMQ消息队列-分布式事务 | Hexo博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java开发总结,MQ,分布式">
+    <meta name="description" content="RocketMQ消息队列[TOC] 基于RocketMQ的分布式事务 在介绍RocketMQ的分布式事务之前，先来了解下什么事分布式事务？  一、分布式事务 简介  在分布式系统中，不止使用一个数据库，比如订单系统使用db_order数据库，产品系统使用的是db_product数据库，在订单系统中只能保证订单相关操作的事务，在产品系统中只能保证产品相关操作的事务。比如：如果在订单系统中进行生成订单">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RocketMQ消息队列-分布式事务">
+<meta property="og:url" content="http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/index.html">
+<meta property="og:site_name" content="Hexo博客">
+<meta property="og:description" content="RocketMQ消息队列[TOC] 基于RocketMQ的分布式事务 在介绍RocketMQ的分布式事务之前，先来了解下什么事分布式事务？  一、分布式事务 简介  在分布式系统中，不止使用一个数据库，比如订单系统使用db_order数据库，产品系统使用的是db_product数据库，在订单系统中只能保证订单相关操作的事务，在产品系统中只能保证产品相关操作的事务。比如：如果在订单系统中进行生成订单">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200206105854909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200206110228640.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200206110235659.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200206110253237.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200206110258342.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-04-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-19T07:49:42.624Z">
+<meta property="article:author" content="Yonggang Shi">
+<meta property="article:tag" content="Java开发总结">
+<meta property="article:tag" content="MQ">
+<meta property="article:tag" content="分布式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200206105854909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+    
+        <link rel="alternate" type="application/atom+xml" title="Hexo博客" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Yonggang Shi</h5>
+          <a href="mailto:xshiyonggang@163.com" title="xshiyonggang@163.com" class="mail">xshiyonggang@163.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rainandsunshine" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/null" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/custom"  >
+                <i class="icon icon-lg icon-link"></i>
+                测试
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">RocketMQ消息队列-分布式事务</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">RocketMQ消息队列-分布式事务</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-04-18T16:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-04-19
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/MQ/">MQ</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#RocketMQ消息队列"><span class="post-toc-number">1.</span> <span class="post-toc-text">RocketMQ消息队列</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#基于RocketMQ的分布式事务"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">基于RocketMQ的分布式事务</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一、分布式事务"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">一、分布式事务</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二、分布式事务解决方案"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">二、分布式事务解决方案</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#三、RocketMQ事务消息实例"><span class="post-toc-number">1.4.</span> <span class="post-toc-text">三、RocketMQ事务消息实例</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#四、分布式事务实现新用户注册送积分"><span class="post-toc-number">1.5.</span> <span class="post-toc-text">四、分布式事务实现新用户注册送积分</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-mq/RocketMQ消息队列之分布式事务"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">RocketMQ消息队列-分布式事务</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-04-19 00:00:00" datetime="2020-04-18T16:00:00.000Z"  itemprop="datePublished">2020-04-19</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/MQ/">MQ</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="RocketMQ消息队列"><a href="#RocketMQ消息队列" class="headerlink" title="RocketMQ消息队列"></a>RocketMQ消息队列</h1><p>[TOC]</p>
+<h2 id="基于RocketMQ的分布式事务"><a href="#基于RocketMQ的分布式事务" class="headerlink" title="基于RocketMQ的分布式事务"></a>基于RocketMQ的分布式事务</h2><blockquote>
+<p>在介绍RocketMQ的分布式事务之前，先来了解下什么事分布式事务？</p>
+</blockquote>
+<h2 id="一、分布式事务"><a href="#一、分布式事务" class="headerlink" title="一、分布式事务"></a>一、分布式事务</h2><ul>
+<li><p>简介</p>
+<blockquote>
+<p>在分布式系统中，不止使用一个数据库，比如订单系统使用db_order数据库，产品系统使用的是db_product数据库，在订单系统中只能保证订单相关操作的事务，在产品系统中只能保证产品相关操作的事务。比如：如果在订单系统中进行生成订单、扣减库存的业务，如果出现异常，那么创建订单的事务会回滚，而扣减库存的事务则不会，因为本地事务是不能夸数据库的。跨库的事务就属于分布式事务。</p>
+<p>把分布式系统中两个相关操作看成是一个单元，比如创建订单和修改库存的操作，该单元要么一起成功，要么一起失败，这就是分布式事务。</p>
+</blockquote>
+</li>
+<li><p>关于分布式事务你不得不知的两个理论：</p>
+</li>
+</ul>
+<blockquote>
+<p>1、CAP定理<br>CAP原则又称CAP定理，指的是在一个分布式系统中，WEB服务无法同时满足以下3个特性：</p>
+<p>一致性(Consistency) ： 在分布式系统中数据一旦更新，所有数据变动都是同步的</p>
+<p>可用性(Availability) ： 好的响应性能，每个操作都必须有预期的响应结束</p>
+<p>分区容错性(Partition tolerance) ： 在网络分区的情况下，即使出现单个节点无法可用，系统依然正常对外提供服务</p>
+<p>首先在分布式系统中，横向扩展策略依赖于数据分区，所以一般会在一致性和可用性上做出牺牲。</p>
+<p>2、BASE理论<br>BASE理论中的三个特性：</p>
+<p>Basically Available（基本可用）</p>
+<p>Soft state（软状态）</p>
+<p>Eventually consistent（最终一致性）</p>
+<p>三个特性分别指的是：</p>
+<p>（1）基本可用是指分布式系统在出现不可预知的故障的时候，允许损失部分可用性——但请注意，这绝不等价于系统不可用。</p>
+<p>（2）软状态，和硬状态对应，是指允许系统中的数据存在中间状态，并认为该中间状态的存在不会影响系统的整体可用性，即允许系统不同节点的数据副本之间进行数据同步的过程存在延时。</p>
+<p>（3）最终一致性强调的是系统所有的数据副本，在经过一段时间的同步后，最终能够达到一个一致的状态。因此，最终一致性的本质是需要系统保证最终数据能够达到一致，而不需要试试保证系统数据的强一致性。</p>
+<p>BASE理论是对CAP中的一致性和可用性进行一个权衡的结果，理论的核心思想就是：我们无法做到强一致，但每个应用都可以根据自身的业务特点，采用适当的方式来使系统达到最终一致性（Eventual consist  ency）。<br>————————————————<br>版权声明：本文为CSDN博主「坏菠萝」的原创文章，遵循 CC 4.0 BY-SA 版权协议，转载请附上原文出处链接及本声明。<br>原文链接：<a href="https://blog.csdn.net/abcwanglinyong/article/details/82116669" target="_blank" rel="noopener">https://blog.csdn.net/abcwanglinyong/article/details/82116669</a></p>
+</blockquote>
+<h2 id="二、分布式事务解决方案"><a href="#二、分布式事务解决方案" class="headerlink" title="二、分布式事务解决方案"></a>二、分布式事务解决方案</h2><blockquote>
+<p>分布式事务解决方案有很多种，这里针对RocketMQ本身介绍下<strong>两阶段提交</strong>（2PC）。因为本身RocketMQ的分布式事务消息就是基于消息中间件模拟的两阶段提价（2PC）。</p>
+</blockquote>
+<ul>
+<li>主要分为以下几个步骤</li>
+</ul>
+<ol>
+<li><p>系统A先向消息中间件发送一条预备消息，消息中间件保存还该消息后向系统A发送确认消息</p>
+</li>
+<li><p>系统A接收到MQ的确认消息后，执行本地事务</p>
+</li>
+<li><p>系统A根据本地事务执行结果再向MQ发送提交信息，以提交二次确认</p>
+</li>
+<li><p>MQ收到二次确认消息后，不预备消息标记为可投递，订阅者最终讲接收到该消息</p>
+</li>
+</ol>
+<ul>
+<li>在这过程中是如何进行回滚操作？</li>
+</ul>
+<ol>
+<li><p>在本地事务未执行之前，也就是上面的1和2出错的话，不会进入后面的阶段，也就不会有问题</p>
+</li>
+<li><p>第3步出错系统A会实现一个消息回查接口，MQ服务端在等不到系统A反馈时会轮询该消息回查接口，检查系统A的本地事务执行结果。如果事务成功执行则进入下个阶段，否则回滚到第一步中。</p>
+</li>
+<li><p>第4布出错，此时系统A的本地事务已经提交成功，MQ服务端通过回查接口能够检查到该事务执行成功，那么由MQ服务端将预备消息标记为可投递，从而完成消息事务的处理。</p>
+<p>至此可实现跨系统是分布式事务了。</p>
+</li>
+</ol>
+<blockquote>
+<p>整体的分布式事务被拆分成一个消息事务（系统A的本地事务+发消息）+系统B的本地事务，系统B的操作由消息驱动，这样系统A和系统B的事务便绑定在一起。</p>
+</blockquote>
+<ul>
+<li><p>RocketMQ整体交互流程图如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/20200206105854909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="9873681-1e6612b094cb561d"></p>
+</li>
+</ul>
+<ol>
+<li>事务发起方首先发送准本预备消息到MQServer</li>
+<li>MQServer向事务发起方ACK确认消息发送成功</li>
+<li>事务发起方接收到确认消息后执行事务</li>
+<li>事务发起方根据本地事务的执行结果返回commit或rollback给MQserver。如果发送的是rollback，则MQ将删除该预备消息不进行下发；否则MQ会把该预备消息发送给Consumer</li>
+<li>如果在执行本地事务过程中该应用挂了或者超时，第4步提交的二次确认消息最终没有到达MQServer，MQServer将在经过一定时间后对该消息发起消息回查，通过不停的询问同组的其他的Producer来获取状态</li>
+<li>发送方接受到回查消息后查询对应消息的本地事务执行结果</li>
+<li>根据回查的本地事务的最终执行结果再次提交二次确认</li>
+<li>消费端的消息成功机制是由MQ保证的 </li>
+</ol>
+<h2 id="三、RocketMQ事务消息实例"><a href="#三、RocketMQ事务消息实例" class="headerlink" title="三、RocketMQ事务消息实例"></a>三、RocketMQ事务消息实例</h2><p><strong>建议大家使用MQ的时候要选择MQ版本4.3以上的，而且pom文件引入的rocketmq-client版本号要与你服务器上的版本号一致，否则可能会出现No route info of this topic这样的异常信息，被这个坑惨了</strong></p>
+<ul>
+<li><p>事务消息生产者</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/03 17:11</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionProducer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span>  Logger logger = LoggerFactory.getLogger(TransactionProducer<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line"></span><br><span class="line">        TransactionMQProducer producer = <span class="keyword">new</span> TransactionMQProducer(<span class="string">"transaction_producer_group"</span>);</span><br><span class="line"></span><br><span class="line">        producer.setNamesrvAddr(Consts.MQ_ADDR);</span><br><span class="line">        ExecutorService executorService = <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">2</span>, <span class="number">5</span>, <span class="number">100</span>, TimeUnit.SECONDS, <span class="keyword">new</span> ArrayBlockingQueue&lt;&gt;(<span class="number">2000</span>), (Runnable r) -&gt;</span><br><span class="line">        &#123;</span><br><span class="line">            Thread thread = <span class="keyword">new</span> Thread(r);</span><br><span class="line">            thread.setName(<span class="string">"client-transaction-msg-check-thread"</span>);</span><br><span class="line">            <span class="keyword">return</span> thread;</span><br><span class="line">        &#125;);</span><br><span class="line">        <span class="comment">//设置本地事务执行的线程池</span></span><br><span class="line">        producer.setExecutorService(executorService);</span><br><span class="line">        producer.setTransactionListener(<span class="keyword">new</span> TransactionListener() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> LocalTransactionState <span class="title">executeLocalTransaction</span><span class="params">(Message message, Object o)</span> </span>&#123;</span><br><span class="line">                <span class="comment">//本地事务处理逻辑</span></span><br><span class="line">                logger.info(<span class="string">"本地事务执行。。。"</span>);</span><br><span class="line">                logger.info(<span class="string">"消息标签："</span>+<span class="keyword">new</span> String(message.getTags()));</span><br><span class="line">                logger.info(<span class="string">"消息内容："</span>+<span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">                String tag = message.getTags();</span><br><span class="line">                <span class="keyword">if</span> (tag.equals(<span class="string">"Transaction1"</span>))&#123;</span><br><span class="line">                    <span class="comment">//消息的标签如果是Transaction1,则返回事务失败标记</span></span><br><span class="line">                    logger.error(<span class="string">"模拟本地事务执行失败"</span>);</span><br><span class="line">                    <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">                &#125;</span><br><span class="line">                logger.info(<span class="string">"模拟本地事务成功"</span>);</span><br><span class="line">                <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> LocalTransactionState <span class="title">checkLocalTransaction</span><span class="params">(MessageExt messageExt)</span> </span>&#123;</span><br><span class="line">                <span class="comment">//消息回查接口</span></span><br><span class="line">                logger.info(<span class="string">"服务器调用消息回查接口"</span>);</span><br><span class="line">                logger.info(<span class="string">"消息标签："</span>+<span class="keyword">new</span> String(messageExt.getTags()));</span><br><span class="line">                logger.info(<span class="string">"消息内容："</span>+<span class="keyword">new</span> String(messageExt.getBody()));</span><br><span class="line">                <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line"></span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        producer.start();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i =<span class="number">0</span> ;i&lt;<span class="number">2</span>;i++)&#123;</span><br><span class="line">            Message message=<span class="keyword">new</span> Message(<span class="string">"TopicTransaction"</span>,<span class="string">"Transaction"</span>+i,(<span class="string">"Hello Rocakmq transaction"</span>).getBytes());</span><br><span class="line">            SendResult sendResult =producer.sendMessageInTransaction(message,<span class="keyword">null</span>);</span><br><span class="line">            logger.info(String.valueOf(sendResult));</span><br><span class="line">            logger.info(<span class="string">""</span>);</span><br><span class="line">            TimeUnit.MICROSECONDS.sleep(<span class="number">10</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i =<span class="number">0</span> ;i&lt;<span class="number">100</span>;i++)&#123;</span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        producer.shutdown();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>与普通生产者不同的地方是，这里需要调用<strong>setTransactionListener</strong>方法，通过自己实现<strong>TransactionListener</strong>接口的<strong>executeLocalTransaction</strong>执行本地事务和<strong>checkLocalTransaction</strong>消息回查方法</p>
+</blockquote>
+<p>执行结果说明有个事务消息挂了，实际上发送过去的就只有一条</p>
+<p><img src="https://img-blog.csdnimg.cn/20200206110228640.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="1580798226922"></p>
+</li>
+<li><p>事务消息消费者</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/03 22:11</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionConsumer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span>   Logger logger = LoggerFactory.getLogger(TransactionConsumer<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> MQClientException </span>&#123;</span><br><span class="line">        DefaultMQPushConsumer consumer =<span class="keyword">new</span> DefaultMQPushConsumer(<span class="string">"transaction_consumer_group"</span>);</span><br><span class="line">        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);</span><br><span class="line">        consumer.setNamesrvAddr(Consts.MQ_ADDR);</span><br><span class="line">        consumer.subscribe(<span class="string">"TopicTransaction"</span>,<span class="string">"*"</span>);</span><br><span class="line">        consumer.registerMessageListener(<span class="keyword">new</span> MessageListenerConcurrently() &#123;</span><br><span class="line">            <span class="keyword">private</span> Random random = <span class="keyword">new</span> Random();</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> ConsumeConcurrentlyStatus <span class="title">consumeMessage</span><span class="params">(List&lt;MessageExt&gt; list, ConsumeConcurrentlyContext consumeConcurrentlyContext)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">for</span> (MessageExt msg: list) &#123;</span><br><span class="line">                    logger.info(<span class="string">"消息消费者接收到消息"</span>+msg);</span><br><span class="line">                    logger.info(<span class="string">"接收到的消息标签："</span>+<span class="keyword">new</span> String(msg.getTags()));</span><br><span class="line">                    logger.info(<span class="string">"接收到消息内容："</span>+<span class="keyword">new</span> String(msg.getBody()));</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    <span class="comment">//模拟业务处理</span></span><br><span class="line">                    TimeUnit.SECONDS.sleep(random.nextInt(<span class="number">5</span>));</span><br><span class="line">                &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">                    e.printStackTrace();</span><br><span class="line">                    <span class="keyword">return</span>  ConsumeConcurrentlyStatus.RECONSUME_LATER;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">return</span> ConsumeConcurrentlyStatus.CONSUME_SUCCESS;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;);</span><br><span class="line">        consumer.start();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行事务消息消费者，仅消费了<strong>Transaction0</strong>，说明本地事务消息失败的没有被发过来</p>
+<p><img src="https://img-blog.csdnimg.cn/20200206110235659.png" alt="1580798597842"></p>
+</li>
+</ul>
+<h2 id="四、分布式事务实现新用户注册送积分"><a href="#四、分布式事务实现新用户注册送积分" class="headerlink" title="四、分布式事务实现新用户注册送积分"></a>四、分布式事务实现新用户注册送积分</h2><blockquote>
+<p>背景介绍：新用户注册赠送积分。这里的流程就是把用户表格积分表分别放在不同的库，实现两者的跨库事务操作。</p>
+</blockquote>
+<p>这里我们主要介绍下核心代码，完整的源码可以follow<a href="https://github.com/rainandsunshine/Poet.git" target="_blank" rel="noopener">我的大型仓库</a> <a href="https://github.com/rainandsunshine/Poet.git" target="_blank" rel="noopener">https://github.com/rainandsunshine/Poet.git</a> </p>
+<ul>
+<li>下面分为两块，一个是配置双数据源，单个数据源不能实现跨库操作；二是RocketMQ的分布式事务在具体业务中如何实现。</li>
+</ul>
+<ol>
+<li><p>配置双数据源，也就是一个系统里面连接两个库。这个项目使用的是JdbcTemplate作为持久层的开发，在SpringBoot中直接新建个配置类，给数据源都绑定好。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 22:58</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 双数据源配置</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DataSourceConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"testDataSource"</span>)</span><br><span class="line">    <span class="meta">@Primary</span></span><br><span class="line">    <span class="meta">@Qualifier</span>(<span class="string">"testDataSource"</span>)</span><br><span class="line">    <span class="meta">@ConfigurationProperties</span>(prefix=<span class="string">"spring.datasource.hikari.mysql"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">testDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> DataSourceBuilder.create().build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"formalDataSource"</span>)</span><br><span class="line">    <span class="meta">@Qualifier</span>(<span class="string">"formalDataSource"</span>)</span><br><span class="line">    <span class="meta">@ConfigurationProperties</span>(prefix = <span class="string">"spring.datasource.formal.mysql"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DataSource <span class="title">formalDataSource</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> DataSourceBuilder.create().build();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name=<span class="string">"testJdbcTemplate"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> JdbcTemplate <span class="title">testJdbcTemplate</span> <span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            @Qualifier(<span class="string">"testDataSource"</span>)</span>  DataSource testDataSource ) </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> JdbcTemplate(testDataSource);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"formalJdbcTemplate"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> JdbcTemplate <span class="title">formalJdbcTemplate</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">            @Qualifier(<span class="string">"formalDataSource"</span>)</span> DataSource formalDataSource)</span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> JdbcTemplate(formalDataSource);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * @Description:用户DAO层bean， 通过参数注入对应的jdbctemplate，实现对库绑定</span></span><br><span class="line"><span class="comment">     * @Param: [jdbcTemplate]</span></span><br><span class="line"><span class="comment">     * @Return: cn.loveyx815.rocketmq.mqtransaction.dao.UserDao</span></span><br><span class="line"><span class="comment">     * @Author: Yonggang Shi</span></span><br><span class="line"><span class="comment">     * @Date: 2020/2/5/005 下午 11:57</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name=<span class="string">"userDao"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserDao <span class="title">getUserDao</span><span class="params">(@Qualifier(<span class="string">"testJdbcTemplate"</span>)</span> JdbcTemplate jdbcTemplate)</span>&#123;</span><br><span class="line">        UserDao userDao =<span class="keyword">new</span> UserDao();</span><br><span class="line">        userDao.setJdbcTemplate(jdbcTemplate);</span><br><span class="line">        <span class="keyword">return</span>  userDao;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * @Description:积分DAO层bean， 通过参数注入对应的jdbctemplate，实现对库绑定</span></span><br><span class="line"><span class="comment">     * @Param: [jdbcTemplate]</span></span><br><span class="line"><span class="comment">     * @Return: cn.loveyx815.rocketmq.mqtransaction.dao.UserDao</span></span><br><span class="line"><span class="comment">     * @Author: Yonggang Shi</span></span><br><span class="line"><span class="comment">     * @Date: 2020/2/5/005 下午 11:57</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span>(name=<span class="string">"pointDao"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> PointDao <span class="title">getPointDao</span><span class="params">(@Qualifier(<span class="string">"formalJdbcTemplate"</span>)</span> JdbcTemplate jdbcTemplate)</span>&#123;</span><br><span class="line">        PointDao pointDao =<span class="keyword">new</span> PointDao();</span><br><span class="line">        pointDao.setJdbcTemplate(jdbcTemplate);</span><br><span class="line">        <span class="keyword">return</span>  pointDao;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>配置多数据源一定有个主要的数据源，不然程序加载就不能识别默认的，导致报错。@<strong>Primary</strong>注解加在你想加的<strong>DataSource</strong>上。</p>
+<p>先注入两个<strong>DataSource</strong>的bean后，再分别注入<strong>JdbcTemplate</strong>中，最后把持久层的userDAO和pointDAO分贝注入不同的<strong>Jdbctemplate</strong>的bean，这样就可以实现多数经验绑定了。</p>
+</li>
+<li><p>下面就是介绍事务消息生产者和消费者</p>
+<blockquote>
+<p>除了那些基本的配置之外，主要的是在事务消息可以实现分布式事务，基于<strong>2PC</strong>(二阶段提交)前文已经介绍过了。</p>
+<p>特别的地方就是在消息生产者生产的时候需要添加个本地事务监听器，用来监听本地事务执行状态，然后再发送消息。</p>
+<p>而消费者也需要自己实现<strong>MessageListenerConcurrently</strong>接口的方法，可以在消费消息的时候做一些业务处理</p>
+</blockquote>
+</li>
+</ol>
+<ul>
+<li><p>消息监听器TransactionMessageListener</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 18:50</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 事务消息监听器，用作消费者消费的监听逻辑实现</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionMessageListener</span> <span class="keyword">implements</span> <span class="title">MessageListenerConcurrently</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(<span class="keyword">this</span>.getClass());</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Resource</span></span><br><span class="line">    <span class="keyword">private</span> PointService pointService;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ConsumeConcurrentlyStatus <span class="title">consumeMessage</span><span class="params">(List&lt;MessageExt&gt; list, ConsumeConcurrentlyContext consumeConcurrentlyContext)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">for</span> (MessageExt message:list)&#123;</span><br><span class="line">                logger.info(<span class="string">"消息消费者接收到消息:"</span>+message);</span><br><span class="line">                logger.info(<span class="string">"接收到消息内容:"</span>+<span class="keyword">new</span> String (message.getBody()));</span><br><span class="line">                <span class="comment">//从消息体中获取积分消息对象</span></span><br><span class="line">                UserPointMessage userPointMessage= JSON.parseObject(message.getBody(),UserPointMessage<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">                <span class="keyword">if</span> (userPointMessage!=<span class="keyword">null</span>)&#123;</span><br><span class="line">                    Point point = <span class="keyword">new</span> Point();</span><br><span class="line">                    point.setUserId(userPointMessage.getUserId());</span><br><span class="line">                    point.setAmount(userPointMessage.getAmount());</span><br><span class="line">                    <span class="comment">//保存用户积分记录并提交本地事务</span></span><br><span class="line">                    pointService.savePoint(point);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">            logger.error(<span class="string">"消息消费出错"</span>+e);</span><br><span class="line">            <span class="keyword">return</span>  ConsumeConcurrentlyStatus.RECONSUME_LATER;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//正常消费成功</span></span><br><span class="line">        <span class="keyword">return</span> ConsumeConcurrentlyStatus.CONSUME_SUCCESS;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>本地事务监听器UserLocalTransactionListener</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 18:25</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 本地事务监听器，用作生产者生产消息的逻辑</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserLocalTransactionListener</span> <span class="keyword">implements</span> <span class="title">TransactionListener</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(<span class="keyword">this</span>.getClass());</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LocalTransactionState <span class="title">executeLocalTransaction</span><span class="params">(Message message, Object o)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//本地事务处理逻辑</span></span><br><span class="line">        logger.info(<span class="string">"本地事务执行。。。"</span>);</span><br><span class="line">        logger.info(<span class="string">"消息标签："</span>+<span class="keyword">new</span> String(message.getTags()));</span><br><span class="line">        logger.info(<span class="string">"消息内容："</span>+<span class="keyword">new</span> String(message.getBody()));</span><br><span class="line">        <span class="comment">//从消息体重获取积分消息对象</span></span><br><span class="line">        UserPointMessage userPointMessage = JSON.parseObject(message.getBody(), UserPointMessage<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        <span class="comment">//保存用户记录并提交本地事务</span></span><br><span class="line">        userService.saveUser(userPointMessage.getUserId(),userPointMessage.getUserName());</span><br><span class="line">        <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> LocalTransactionState <span class="title">checkLocalTransaction</span><span class="params">(MessageExt messageExt)</span> </span>&#123;</span><br><span class="line">        <span class="comment">//消息回查接口</span></span><br><span class="line">        logger.info(<span class="string">"服务器调用消息回查接口"</span>);</span><br><span class="line">        logger.info(<span class="string">"消息标签："</span>+<span class="keyword">new</span> String(messageExt.getTags()));</span><br><span class="line">        logger.info(<span class="string">"消息内容："</span>+<span class="keyword">new</span> String(messageExt.getBody()));</span><br><span class="line">        <span class="comment">//从消息体重获取积分消息对象</span></span><br><span class="line">        UserPointMessage userPointMessage = JSON.parseObject(messageExt.getBody(),UserPointMessage<span class="class">.<span class="keyword">class</span>)</span>;</span><br><span class="line">        <span class="keyword">if</span> (userPointMessage!= <span class="keyword">null</span>)&#123;</span><br><span class="line">            String userId = userPointMessage.getUserId();</span><br><span class="line">            <span class="keyword">if</span> (userService.getById(userId) != <span class="keyword">null</span>)&#123;</span><br><span class="line">                logger.info(<span class="string">"本地插入用户表成功！"</span>);</span><br><span class="line"><span class="comment">//                表示本地事务执行成功</span></span><br><span class="line">                <span class="keyword">return</span> LocalTransactionState.COMMIT_MESSAGE;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> LocalTransactionState.ROLLBACK_MESSAGE;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过使用@<strong>Component</strong>注解来标识这两个监听器注入Spring容器，然后在生产者、消费者配置类中分别引用这两个监听器bean。</p>
+</li>
+<li><p>生产者</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 17:55</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 消息生产者</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionSpringProducer</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(getClass());</span><br><span class="line">    <span class="keyword">private</span> String producerGroupName;</span><br><span class="line">    <span class="keyword">private</span> String nameServerAdd;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> corePoolSize = <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> maximumPoolSize = <span class="number">5</span>;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> keepAliveTime = <span class="number">100</span>;</span><br><span class="line">    <span class="keyword">private</span> TransactionMQProducer producer;</span><br><span class="line">    <span class="keyword">private</span> TransactionListener transactionListener;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TransactionSpringProducer</span><span class="params">(String producerGroupName,String nameServerAdd,<span class="keyword">int</span> corePoolSize,<span class="keyword">int</span> maximumPoolSize,<span class="keyword">long</span> keepAliveTime,TransactionListener transactionListener)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.corePoolSize=corePoolSize;</span><br><span class="line">        <span class="keyword">this</span>.keepAliveTime=keepAliveTime;</span><br><span class="line">        <span class="keyword">this</span>.maximumPoolSize=maximumPoolSize;</span><br><span class="line">        <span class="keyword">this</span>.nameServerAdd=nameServerAdd;</span><br><span class="line">        <span class="keyword">this</span>.producerGroupName=producerGroupName;</span><br><span class="line">        <span class="keyword">this</span>.transactionListener=transactionListener;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始启动消息生产者服务。。。"</span>);</span><br><span class="line"></span><br><span class="line">        producer = <span class="keyword">new</span> TransactionMQProducer(producerGroupName);</span><br><span class="line">        producer.setNamesrvAddr(nameServerAdd);</span><br><span class="line">        ExecutorService executorService = <span class="keyword">new</span> ThreadPoolExecutor(corePoolSize,maximumPoolSize,keepAliveTime, TimeUnit.SECONDS,<span class="keyword">new</span> ArrayBlockingQueue&lt;&gt;(<span class="number">2000</span>),(Runnable r )-&gt;&#123;</span><br><span class="line">            Thread thread = <span class="keyword">new</span> Thread(r);</span><br><span class="line">            thread.setName(<span class="string">"client-transaction-msg-check-thread"</span>);</span><br><span class="line">            <span class="keyword">return</span> thread;</span><br><span class="line">        &#125;);</span><br><span class="line">        producer.setExecutorService(executorService);</span><br><span class="line">        producer.setTransactionListener(transactionListener);</span><br><span class="line">        producer.start();</span><br><span class="line">        logger.info(<span class="string">"消息生产者已启动！！！"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destory</span><span class="params">()</span></span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始关闭消息生产服务。。"</span>);</span><br><span class="line">        producer.shutdown();</span><br><span class="line">        logger.info(<span class="string">"生产者服务已关闭"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> DefaultMQProducer <span class="title">getProducer</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> producer;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>消费者</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 18:41</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 消费者</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionSpringConsumer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(<span class="keyword">this</span>.getClass());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String consumerGropuName;</span><br><span class="line">    <span class="keyword">private</span> String nameServerAddr;</span><br><span class="line">    <span class="keyword">private</span> String topicName;</span><br><span class="line">    <span class="keyword">private</span> DefaultMQPushConsumer consumer;</span><br><span class="line">    <span class="keyword">private</span> MessageListenerConcurrently messageListener;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TransactionSpringConsumer</span><span class="params">(String consumerGropuName,String nameServerAddr,String topicName,MessageListenerConcurrently messageListener)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.consumerGropuName=consumerGropuName;</span><br><span class="line">        <span class="keyword">this</span>.messageListener=messageListener;</span><br><span class="line">        <span class="keyword">this</span>.nameServerAddr=nameServerAddr;</span><br><span class="line">        <span class="keyword">this</span>.topicName=topicName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span> <span class="params">()</span> <span class="keyword">throws</span>  Exception</span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始启动消息消费者服务。。。"</span>);</span><br><span class="line">        consumer=<span class="keyword">new</span> DefaultMQPushConsumer(consumerGropuName);</span><br><span class="line">        consumer.setNamesrvAddr(nameServerAddr);</span><br><span class="line">        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);</span><br><span class="line">        consumer.subscribe(topicName,<span class="string">"*"</span>);</span><br><span class="line">        consumer.registerMessageListener(messageListener);</span><br><span class="line">        consumer.start();</span><br><span class="line">        logger.info(<span class="string">"消息消费者服务启动成功"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destory</span><span class="params">()</span></span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始关闭消息消费者服务。。"</span>);</span><br><span class="line">        consumer.shutdown();</span><br><span class="line">        logger.info(<span class="string">"消费者服务已关闭"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  DefaultMQPushConsumer <span class="title">getConsumer</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  consumer;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>生产者、消费者配置类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 18:41</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 消费者</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TransactionSpringConsumer</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(<span class="keyword">this</span>.getClass());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> String consumerGropuName;</span><br><span class="line">    <span class="keyword">private</span> String nameServerAddr;</span><br><span class="line">    <span class="keyword">private</span> String topicName;</span><br><span class="line">    <span class="keyword">private</span> DefaultMQPushConsumer consumer;</span><br><span class="line">    <span class="keyword">private</span> MessageListenerConcurrently messageListener;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">TransactionSpringConsumer</span><span class="params">(String consumerGropuName,String nameServerAddr,String topicName,MessageListenerConcurrently messageListener)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.consumerGropuName=consumerGropuName;</span><br><span class="line">        <span class="keyword">this</span>.messageListener=messageListener;</span><br><span class="line">        <span class="keyword">this</span>.nameServerAddr=nameServerAddr;</span><br><span class="line">        <span class="keyword">this</span>.topicName=topicName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span> <span class="params">()</span> <span class="keyword">throws</span>  Exception</span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始启动消息消费者服务。。。"</span>);</span><br><span class="line">        consumer=<span class="keyword">new</span> DefaultMQPushConsumer(consumerGropuName);</span><br><span class="line">        consumer.setNamesrvAddr(nameServerAddr);</span><br><span class="line">        consumer.setConsumeFromWhere(ConsumeFromWhere.CONSUME_FROM_FIRST_OFFSET);</span><br><span class="line">        consumer.subscribe(topicName,<span class="string">"*"</span>);</span><br><span class="line">        consumer.registerMessageListener(messageListener);</span><br><span class="line">        consumer.start();</span><br><span class="line">        logger.info(<span class="string">"消息消费者服务启动成功"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">destory</span><span class="params">()</span></span>&#123;</span><br><span class="line">        logger.info(<span class="string">"开始关闭消息消费者服务。。"</span>);</span><br><span class="line">        consumer.shutdown();</span><br><span class="line">        logger.info(<span class="string">"消费者服务已关闭"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  DefaultMQPushConsumer <span class="title">getConsumer</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span>  consumer;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样就已经完成了分布式事务生产消费的工作，还有相关的service和dao代码就不贴了，<a href="https://github.com/rainandsunshine/Poet.git" target="_blank" rel="noopener">这里</a> 都有！</p>
+</li>
+</ul>
+</li>
+<li><p>单元测试分布式事务生产消费</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Auther</span>: Yonggang Shi</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: 2020/02/04 23:24</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>:</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@RunWith</span>(SpringRunner<span class="class">.<span class="keyword">class</span>)</span></span><br><span class="line"><span class="class">@<span class="title">SpringBootTest</span>(<span class="title">classes</span> </span>= &#123;RocketmqApplication<span class="class">.<span class="keyword">class</span>&#125;)</span></span><br><span class="line"><span class="class"><span class="title">public</span> <span class="title">class</span> <span class="title">MQConfigTest</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserService userService;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Test</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">newUser</span><span class="params">()</span> <span class="keyword">throws</span> Exception</span>&#123;</span><br><span class="line">        userService.newUserAndPoint(<span class="string">"分布式事务测试"</span>,<span class="number">100</span>);</span><br><span class="line">        Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果如下</p>
+</li>
+</ul>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img-blog.csdnimg.cn/20200206110253237.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="1580921850968" title="">
+                </div>
+                <div class="image-caption">1580921850968</div>
+            </figure>
+
+<p>我们再 看下两个库是否也更新了</p>
+<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img-blog.csdnimg.cn/20200206110258342.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="1580922010823" title="">
+                </div>
+                <div class="image-caption">1580922010823</div>
+            </figure>
+
+<p>至此分布式事务已完成实现</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-04-19T07:49:42.624Z" itemprop="dateUpdated">2020-04-19 15:49:42</time>
+</span><br>
+
+
+        
+        这里可以写作者留言，标签和 hexo 中所有变量及辅助函数等均可调用，示例：<a href="/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" target="_blank" rel="external">http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="http://blog.loveyx815.cn">
+            <img src="/img/avatar.jpg" alt="Yonggang Shi">
+            Yonggang Shi
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/" rel="tag">Java开发总结</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/MQ/" rel="tag">MQ</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F/" rel="tag">分布式</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2020/04/19/%E5%BC%80%E5%8F%91%E5%B7%A5%E4%BD%9C%E6%97%A5%E5%B8%B8%E6%80%BB%E7%BB%93%EF%BC%88%E5%91%BD%E4%BB%A4%E3%80%81%E5%BF%AB%E6%8D%B7%E9%94%AE%EF%BC%89/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">开发工作日常总结</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">RocketMQ消息队列-初识</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license noopener" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Yonggang Shi &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASYAAAEmCAAAAADqr2IGAAAEfklEQVR42u3aS24bMRAFQN//0g6QVYBY1nvdI0Ac1awMSeaQxQX7w6+v+Pn++zz6/N9vv/97Ho3w6Jf5Wx59287ksgcTJkyYML0l0/evT/7KZOr5twnQZmvztWPChAkTpnswbaabjJCHBcXUR6HGbOaYMGHChOkTmPJJzAKCJA1OApQ8TMGECRMmTJjq4eIR9klsW27GhAkTJkyfzJQPl9MkgcUmyMhDirx4fUEtHBMmTJgwvRlTeyTf6e+LH0yYMGHC9GZM+1biVQd/GxC0AcrmwYQJEyZM5zK1ieWssNsubN/gTBqZ9RsxYcKECdOxTPkiZ3CbVmVe0k1mO/sEEyZMmDCdy9QGAXmSmW/ArBXaprV5Qv7DJ5gwYcKE6XCmWfq6CQvaFHQY3Swiox/Ku5gwYcKE6UCmq1Lcq4q5s02aJd51GowJEyZMmA5kSl7/iqAhT3HzJLa9+pMnwJgwYcKE6a5MySLzT9pjeHYp9hXXWDFhwoQJ0z2YZsnn7yO0k5ul2Xmbc1i2xoQJEyZMxzJtyrj5RNsRZu3G9tJPnnJjwoQJE6bTma5KIPepbLuMWfDRJvOYMGHChOlcpjwJ3DQy98HBrKWaEz+ZMyZMmDBhuhFTXsZtm5dtU7MtvLbF4pwMEyZMmDCdzrSpDScjJCl0O5NZ2DFLuTFhwoQJ07lMs+W94lrM71vSsm5KvU+2BBMmTJgwHcW0aTTm7cC2Idomrvl1omEDFRMmTJgwHcs0Sx3baeXH+X55m3cVt5wwYcKECdONmNrUNA8R2mZnUt7Ny8HDYAUTJkyYMB3FlC+4bW3OaDbXg9riclHwxYQJEyZMxzJtirD7Mu6+4NuGArPxMWHChAnTuUz7CzF5qjxbdnLY51d82vQYEyZMmDDdg6l9fXvkby6z5g3Olq+OmDBhwoQJ0+FMs1birBzcvv11B3+0FkyYMGHCdDjTbElJ2/IqvgQi/03bIsWECRMmTOcy5Qlqe/zvL7Dui8gz3FUejwkTJkyY3oxp1rxsk+H8Ny1ie8C3TdCi64sJEyZMmN6SacPRNhpnB3+bpuZH/n5dmDBhwoTpLKa84ZdfoJmlmvn25Ol6/r9P5oAJEyZMmI5imrnm7cl9KDC74jOr1j7p+mLChAkTpsOZ2ms67aG7OdrzjZyVa4tiLiZMmDBhOoopp8lDhM2Fns3f7WGfhCCYMGHChOl0pmQxm9Dh2is7bdt1xvrDmJgwYcKE6RZMeVKaX7KZXaBpE+YcZRbEYMKECROmc5naSSSl21kzct+GzFuhF5d6MWHChAnTGzN9l8/seG6XmpeVZw3Les6YMGHChOlYpv2RnCeNSUk3bzcmi9+3MzFhwoQJ0z2Y8mJue2BfFVjkWG0LFhMmTJgwfQ5Tcty2R3s+/uxqzgarDoMwYcKECdMHMOWXYzYl4w1EO3Je8MWECRMmTJ/GlBRM2wbhpmg7u6BThAuYMGHChOlwprzIm4yTJ5ava4jms03eiAkTJkyYzmWqy50XLbjdjM0Wzpqy9YMJEyZMmN6L6Q+1Y8fJR48qmgAAAABJRU5ErkJggg==" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
