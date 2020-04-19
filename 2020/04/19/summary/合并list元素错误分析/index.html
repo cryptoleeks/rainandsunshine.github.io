@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>合并两个list元素错误分析 | Hexo博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java开发总结">
+    <meta name="description" content="合并两个list元素报错 背景：做题的时候需要合并连个list，本来直接用list.addAll()觉得没啥问题，结果当然会会报错。报错信息显示java.lang.UnsupportedOperationException不能操作异常。  问题已经知道，下面看看本质是啥吧！直接贴代码 12345List&lt;String&gt; list &#x3D; Arrays.asList(list1);">
+<meta property="og:type" content="article">
+<meta property="og:title" content="合并两个list元素错误分析">
+<meta property="og:url" content="http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Hexo博客">
+<meta property="og:description" content="合并两个list元素报错 背景：做题的时候需要合并连个list，本来直接用list.addAll()觉得没啥问题，结果当然会会报错。报错信息显示java.lang.UnsupportedOperationException不能操作异常。  问题已经知道，下面看看本质是啥吧！直接贴代码 12345List&lt;String&gt; list &#x3D; Arrays.asList(list1);">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-04-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-19T08:59:22.587Z">
+<meta property="article:author" content="Yonggang Shi">
+<meta property="article:tag" content="Java开发总结">
+<meta name="twitter:card" content="summary">
+    
+        <link rel="alternate" type="application/atom+xml" title="Hexo博客" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Yonggang Shi</h5>
+          <a href="mailto:xshiyonggang@163.com" title="xshiyonggang@163.com" class="mail">xshiyonggang@163.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rainandsunshine" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/null" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/custom"  >
+                <i class="icon icon-lg icon-link"></i>
+                测试
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">合并两个list元素错误分析</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">合并两个list元素错误分析</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-04-18T16:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-04-19
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/">Java开发总结</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#合并两个list元素报错"><span class="post-toc-number">1.</span> <span class="post-toc-text">合并两个list元素报错</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-summary/合并list元素错误分析"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">合并两个list元素错误分析</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-04-19 00:00:00" datetime="2020-04-18T16:00:00.000Z"  itemprop="datePublished">2020-04-19</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/">Java开发总结</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="合并两个list元素报错"><a href="#合并两个list元素报错" class="headerlink" title="合并两个list元素报错"></a>合并两个list元素报错</h1><blockquote>
+<p>背景：做题的时候需要合并连个list，本来直接用list.addAll()觉得没啥问题，结果当然会会报错。报错信息显示java.lang.UnsupportedOperationException不能操作异常。</p>
+</blockquote>
+<p>问题已经知道，下面看看本质是啥吧！<br>直接贴代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; list = Arrays.asList(list1);</span><br><span class="line">      List&lt;String&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">      List&lt;String&gt; strings = Arrays.asList(list2);</span><br><span class="line">      <span class="keyword">int</span> length1=list1.length;</span><br><span class="line">      list.addAll(strings);<span class="comment">//错误</span></span><br></pre></td></tr></table></figure>
+<p>这里的list1和list2是个String数组，这里要给两个数组并集起来。通过Arrays.asList可以把数组对象转换成List对象，但为什么后面在该被转换后的对象添加list对象却失败了。看下Arrays.asList源码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> <span class="keyword">public</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">List&lt;T&gt; <span class="title">asList</span><span class="params">(T... a)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> ArrayList&lt;&gt;(a);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//这里的ArrayList并不是java.util.ArrayList下面的,是java.util.Arrays下面的内部类</span></span><br><span class="line"><span class="comment">//内部类部分实现如下</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ArrayList</span>&lt;<span class="title">E</span>&gt; <span class="keyword">extends</span> <span class="title">AbstractList</span>&lt;<span class="title">E</span>&gt;</span></span><br><span class="line"><span class="class">        <span class="keyword">implements</span> <span class="title">RandomAccess</span>, <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span></span></span><br><span class="line"><span class="class">    </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">2764017481108945198L</span>;</span><br><span class="line">        <span class="keyword">private</span> <span class="keyword">final</span> E[] a;</span><br><span class="line"></span><br><span class="line">        ArrayList(E[] array) &#123;</span><br><span class="line">            a = Objects.requireNonNull(array);</span><br><span class="line">        &#125;</span><br><span class="line">		<span class="comment">//……</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>那么很明显了，这里维护了一个a这样的数组对象，他被修饰成final，所以后面再使用的时候该元素是不允许被修改的。<br>回到问题本身，这时需要重新新建个可改变的List对象，所以得new java.util.ArraysList()</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="comment">//这里把字符串数据转化过来的list对象放入一个新建的ArrayList中</span></span><br><span class="line">List&lt;String&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;(Arrays.asList(list1)) ;</span><br><span class="line">     List&lt;String&gt; result = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">     List&lt;String&gt; strings = Arrays.asList(list2);</span><br><span class="line">     <span class="keyword">int</span> length1=list1.length;</span><br><span class="line">    <span class="comment">// list.addAll(length1)</span></span><br><span class="line">     list.addAll(strings);</span><br></pre></td></tr></table></figure>
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-04-19T08:59:22.587Z" itemprop="dateUpdated">2020-04-19 16:59:22</time>
+</span><br>
+
+
+        
+        这里可以写作者留言，标签和 hexo 中所有变量及辅助函数等均可调用，示例：<a href="/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/" target="_blank" rel="external">http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="http://blog.loveyx815.cn">
+            <img src="/img/avatar.jpg" alt="Yonggang Shi">
+            Yonggang Shi
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/" rel="tag">Java开发总结</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&title=《合并两个list元素错误分析》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&title=《合并两个list元素错误分析》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《合并两个list元素错误分析》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2020/04/19/summary/%E5%89%8D%E7%AB%AF%E9%A1%B5%E9%9D%A2%E5%85%83%E7%B4%A0%E5%86%85%E5%AE%B9%E8%8E%B7%E5%8F%96%E6%96%B9%E5%BC%8F/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">前端页面元素内容获取方式</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/04/19/summary/%E5%BC%80%E5%8F%91%E5%B7%A5%E4%BD%9C%E6%97%A5%E5%B8%B8%E6%80%BB%E7%BB%93%EF%BC%88%E5%91%BD%E4%BB%A4%E3%80%81%E5%BF%AB%E6%8D%B7%E9%94%AE%EF%BC%89/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">开发工作日常总结</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license noopener" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Yonggang Shi &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&title=《合并两个list元素错误分析》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&title=《合并两个list元素错误分析》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《合并两个list元素错误分析》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/summary/%E5%90%88%E5%B9%B6list%E5%85%83%E7%B4%A0%E9%94%99%E8%AF%AF%E5%88%86%E6%9E%90/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQ4AAAEOCAAAAABd2qZ5AAAD7UlEQVR42u3awU4jQQwEUP7/p1lpbwhCqmwn2pXenFACPT0vSE7b9fERX59/r++vfL9+f7e9Ht390Q7bvxpeOHDgwIEjXijZUE7waKOPoNsVkh3mz4gDBw4cOG458o3mBXj/MMlq+SvJFwgcOHDgwPFOjt8fOzlWJZTt3VtuHDhw4MDx73C0W4xuP+rU7T9OHDhw4MDxao7ZGCl5gPxR86PgbHB13CvFgQMHDhzPdxgFGv7Hn1+Y78CBAwcOHHGJnQ1+roIRs+PcqiTjwIEDB441RzL+uQor5Eemdph01dzEgQMHDhxXHMmDta/nNHkhb/kO2n84cODAgaPkmG1oFjLIB0LtxzAbL0XzNxw4cODAMeKY3SyPwc0etQ0fzD7OL+/iwIEDB441Rx5iaGMEs1FTu2ZbVltiHDhw4MDRcuS3SYJo+UhpMxxqoYuSjwMHDhw41hyz8tki5kOgNvTQHhEjdBw4cODAccSxaeHl5TZvzM0akckXgier4cCBAweOI479QWg2ZJoF8q5+JzrC4cCBAweO0fpJSbsaGrUhhnbl/EhZdDFx4MCBA0fAkW96NnbKV8uHQ3nBztMcX6ZwOHDgwIFjwTFrAiYHobxkJtudhS1mIzQcOHDgwLHhqM95cQNxFlO4Kqvt+jhw4MCB45ZjVmg3pa5dfza4aplw4MCBA8ctx20rcPPzLFS3Xx8HDhw4cOw5Zs3BWdwtL/P7EMPsKIgDBw4cOPYc9SFncbXrz45/7fpFcxAHDhw4cMSdwCJGNmoCJhxt0Z3F8qLVcODAgQPHYv19Ky1vzLWtxjwM8Rlc0aQJBw4cOHC8gGMTLJg17FrivNC2v4kDBw4cOPYcUfmJS9qsBM4id22pbkdlOHDgwIFjxrGJDiQ3yMt22xbcHymjZAcOHDhw4Cg58hKVF9T26HU1Oto0JX/4H8GBAwcOHAuOPKZ2Wwg3a24Kc0SAAwcOHDhewHEVa0gKZF6SN8OnggAHDhw4cBxxtOVzE3Roo2/7x8aBAwcOHK/maIMFs4Zd3kZsW5MbrIddUhw4cODAseZoD3JtiG1fXPO75DGLIsqAAwcOHDhijrbllxfF/N0Eblg448Pqw28fOHDgwIGj5Pgsr31LMWkszkDb9X9YEwcOHDhwrDnacdQmdnBbgNshEw4cOHDgeCdHXhRnAYJkaLRJZGzWL/qUOHDgwIGj5JgVtjxq0I6LZt8UDpqPOHDgwIHjjRw52aZhlxfONvqwSnngwIEDB463cLQ0+bt5AW6jD09KLw4cOHDgOOJowwd5AKLd4uxYmNAkd8GBAwcOHHuOfaDhKu7Qth3zv82LNw4cOHDgWHD8AVtluy07LaM5AAAAAElFTkSuQmCC" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
