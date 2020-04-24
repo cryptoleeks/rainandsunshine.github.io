@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Springboot中Redis学习（事务、Lua、跨域） | Hexo博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java开发总结,SpringBoot,Redis">
+    <meta name="description" content="Redis事务Lua脚本 Lua脚本在Redis中具备原子性，可以保证数据一致性的高并发环境。   Spring中提供了RedisScript接口，DefaultRedisScript为他的实现类 RedisScript接口：12345678public interface RedisScript&lt;T&gt; &amp;#123; &#x2F;&#x2F;获得脚本的sha1 String getSha1(); &#x2F;&#x2F;获取">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Springboot中Redis学习（事务、Lua、跨域）">
+<meta property="og:url" content="http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/index.html">
+<meta property="og:site_name" content="Hexo博客">
+<meta property="og:description" content="Redis事务Lua脚本 Lua脚本在Redis中具备原子性，可以保证数据一致性的高并发环境。   Spring中提供了RedisScript接口，DefaultRedisScript为他的实现类 RedisScript接口：12345678public interface RedisScript&lt;T&gt; &amp;#123; &#x2F;&#x2F;获得脚本的sha1 String getSha1(); &#x2F;&#x2F;获取">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-04-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-04-19T11:09:04.356Z">
+<meta property="article:author" content="Yonggang Shi">
+<meta property="article:tag" content="Java开发总结">
+<meta property="article:tag" content="SpringBoot">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+    
+        <link rel="alternate" type="application/atom+xml" title="Hexo博客" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Yonggang Shi</h5>
+          <a href="mailto:xshiyonggang@163.com" title="xshiyonggang@163.com" class="mail">xshiyonggang@163.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rainandsunshine" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/null" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/custom"  >
+                <i class="icon icon-lg icon-link"></i>
+                测试
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Springboot中Redis学习（事务、Lua、跨域）</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Springboot中Redis学习（事务、Lua、跨域）</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-04-18T16:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-04-19
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis-%E5%88%86%E5%B8%83%E5%BC%8F/">Redis,分布式</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#Redis事务"><span class="post-toc-number">1.</span> <span class="post-toc-text">Redis事务</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#Lua脚本"><span class="post-toc-number">2.</span> <span class="post-toc-text">Lua脚本</span></a></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-Springboot中Redis学习（事务、Lua、跨域）"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Springboot中Redis学习（事务、Lua、跨域）</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-04-19 00:00:00" datetime="2020-04-18T16:00:00.000Z"  itemprop="datePublished">2020-04-19</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Redis-%E5%88%86%E5%B8%83%E5%BC%8F/">Redis,分布式</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h2 id="Redis事务"><a href="#Redis事务" class="headerlink" title="Redis事务"></a>Redis事务</h2><h2 id="Lua脚本"><a href="#Lua脚本" class="headerlink" title="Lua脚本"></a>Lua脚本</h2><blockquote>
+<p>Lua脚本在Redis中具备原子性，可以保证数据一致性的高并发环境。</p>
+</blockquote>
+<ul>
+<li>Spring中提供了RedisScript接口，DefaultRedisScript为他的实现类<br> <strong>RedisScript接口</strong>：<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">RedisScript</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"> <span class="comment">//获得脚本的sha1</span></span><br><span class="line"> <span class="function">String <span class="title">getSha1</span><span class="params">()</span></span>;</span><br><span class="line"> <span class="comment">//获取脚本的返回值</span></span><br><span class="line"> <span class="function">Class&lt;T&gt; <span class="title">getResultType</span><span class="params">()</span></span>;</span><br><span class="line"> <span class="comment">//获取脚本的字符串</span></span><br><span class="line"> <span class="function">String <span class="title">getScriptAsString</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+</li>
+</ul>
+<ul>
+<li><strong>缓存注解应用</strong><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//获取ID，取参数ID缓存用户</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="meta">@Transactional</span></span><br><span class="line">  <span class="meta">@Cacheable</span>(value = <span class="string">" redisCache"</span>,key = <span class="string">"'redis_user_'+#id"</span>)</span><br><span class="line">  <span class="function"><span class="keyword">public</span> User <span class="title">getUser</span><span class="params">(<span class="keyword">long</span> id)</span> </span>&#123;</span><br><span class="line">       <span class="keyword">return</span> dao.getUser(id);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+<blockquote>
+<p><strong>@Cacheable</strong> 注解会先尝试从指定缓存中取值</p>
+</blockquote>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//插入用户，mybatis会回填ID，取结果ID缓存用户</span></span><br><span class="line">   <span class="meta">@Override</span></span><br><span class="line">   <span class="meta">@Transactional</span></span><br><span class="line">   <span class="meta">@CachePut</span>(value = <span class="string">" redisCache"</span>,key = <span class="string">"'redis_user_'+#result.id"</span>)</span><br><span class="line">   <span class="function"><span class="keyword">public</span> User <span class="title">insertUser</span><span class="params">(User user)</span> </span>&#123;</span><br><span class="line">       dao.insertUser(user);</span><br><span class="line">       <span class="keyword">return</span> user;</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+<blockquote>
+<p><strong>@CachePut</strong> 注解会把返回的结果放入缓存中<br><strong>注</strong>   <code>AOP基于动态代理，这里同类内部调用方法，不会使注解生效</code></p>
+</blockquote>
+<ul>
+<li><strong>springboot中解决跨域问题</strong></li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@CrossOrigin</span>(origins = &#123;<span class="string">"对方的域名"</span>, <span class="string">"null"</span>&#125;)</span><br></pre></td></tr></table></figure>
+<p>将该注解加在对用的controller的类或者方法上就可以完成对跨域的访问<br><a href="https://github.com/rainandsunshine/springboot_reomte.git" target="_blank" rel="noopener">代码Git地址</a><a href="https://github.com/rainandsunshine/springboot_reomte.git" target="_blank" rel="noopener">https://github.com/rainandsunshine/springboot_reomte.git</a></p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-04-19T11:09:04.356Z" itemprop="dateUpdated">2020-04-19 19:09:04</time>
+</span><br>
+
+
+        
+        这里可以写作者留言，标签和 hexo 中所有变量及辅助函数等均可调用，示例：<a href="/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/" target="_blank" rel="external">http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="http://blog.loveyx815.cn">
+            <img src="/img/avatar.jpg" alt="Yonggang Shi">
+            Yonggang Shi
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/" rel="tag">Java开发总结</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Redis/" rel="tag">Redis</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/SpringBoot/" rel="tag">SpringBoot</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&title=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&title=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between">
+  
+    <div class="waves-block waves-effect prev">
+      <a href="/2020/04/19/Docker%E4%BB%8E%E5%85%A5%E5%9D%91%E5%88%B0%E6%94%BE%E5%BC%83/" id="post-prev" class="post-nav-link">
+        <div class="tips"><i class="icon icon-angle-left icon-lg icon-pr"></i> Prev</div>
+        <h4 class="title">Docker从入坑到放弃</h4>
+      </a>
+    </div>
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/04/19/String%E3%80%81StringBuilder%E5%81%9A%E4%B8%BA%E5%AE%9E%E5%8F%82%E5%9C%A8%E6%96%B9%E6%B3%95%E4%B8%AD%E4%BF%AE%E6%94%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC%E7%9A%84%E9%97%AE%E9%A2%98/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">String、StringBuilder做为实参在方法中修改字符串值的问题</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license noopener" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Yonggang Shi &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&title=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&title=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Springboot中Redis学习（事务、Lua、跨域）》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/04/19/Springboot%E4%B8%ADRedis%E5%AD%A6%E4%B9%A0%EF%BC%88%E4%BA%8B%E5%8A%A1%E3%80%81Lua%E3%80%81%E8%B7%A8%E5%9F%9F%EF%BC%89/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAT4AAAE+CAAAAAAxUyPsAAAFRUlEQVR42u3dwYrkRhAE0Pn/n7bB13X3RERKYPDTaWi0kuqVQFmRBfvzEx9//XP8+fef53w68/u/aq+c3/3T8emcnzcOfPjw4cOH78ONv98mOf/Ph0jOyafhO3Q+xjs9Pnz48OHDd+FLSopkYN/LkQTiqfIlmch8wj7+jg8fPnz48L3Gd0HffsmLpGdDDXz48OHDh++/wLdxtM2AbfGfXCEP6/Hhw4cPH763+fJ28ra8/87aDinHur8Wj/U68OHDhw8fvqmw+D/8/fCBDx8+fPjwHWLxyyI8H8al9Glfhe3Ahw8fPnz4No2tBf799yRiuNdcyRa0Lf4omgH48OHDhw9fzJdfNPm9vcI27KRlvp2TlzL48OHDhw/fxrd97LcWcnK1dlK3iWzb6r+UWfjw4cOHD1/MdwfKy4s2YtiGmjcV8mZDXffhw4cPHz58QXXRtrGTEqQtU55qY+cjSkquerMaPnz48OHDd245vxHcb2VES5NPc14w/dIyx4cPHz58+D48YRuab+XOFuu/3ZjfCqOfrSLDhw8fPnz4YpRLTJ+UAu3ms62Uye9eRAz48OHDhw9fyddeKB/MsyXC5fqX9nx+HXz48OHDhy/hy5vNl7DgMuC2WLkE93mDHx8+fPjw4dv4kpLlslFso7m3wJOCrKjmktYFPnz48OHDF/C1DfKtNNnC8ae2nW1TEo0RHz58+PDhO/BdtnYlA77QJBzJ8+dTFbXe8eHDhw8fvpIvXyq/97htQN8GAflmuHGbHT58+PDhw1fyJcvvPCLPh9Qu+LctcZfyq5hyfPjw4cOHL/i9XcYnn/ZLWbAVEKeNZcHdP14BHz58+PDhO/MlxyXi38qLpxb/yfQUBRY+fPjw4cO3BMlR/N0WNHfQPLZoo4S83KmnHB8+fPjw4fv6b9sNZPcFfDKYPPrPo4Ft+n954/Dhw4cPH76Jbysg8ub61mh/JV4/NODrsB4fPnz48OELtqa1EXkbKFyC/su9kgkemwr48OHDhw9fzJd81PMNatsg83Lkcven/o52GeDDhw8fPnxLH3n8DyfaAWyBezvl7TlJGYQPHz58+PC1fO3ivx1APgHPxgRPnfkLLj58+PDhw1fytYvhS1D+xuC36+SlVTRqfPjw4cOHr+TLG8xF7z1uxucFTTKwdixttFEMEh8+fPjw4fu6w+qy4N9+z3d55W9BjtXesQjr8eHDhw8fvoDvHr4nfHkY0W4RuzcJ6hHhw4cPHz58hxElD9du5LrH68mxTX87PVF8gA8fPnz48AV8yalbcL8t3fNSJnnmNlfPz8GHDx8+fPjufO3AngoI7sPbXojk/LpZjg8fPnz48H1d7W6f8HsD+9Le3iYgmdoiesCHDx8+fPj21DpK9NsmdFsSXQqjt1+CYiz48OHDhw/fB7482t4e4lKOJJOaN7/f2H6HDx8+fPjwtXz5o1/a6nlp0gbxeWmVT8A4zfjw4cOHD1/A14bmW1P8svlsK4OSAmiLSPDhw4cPH747X/s5b4m3IW3t9st2tJ/tLcCHDx8+fPgOfG+E7Pkz5MNug/V8FElUgQ8fPnz48G1890V+EohvC/V7NL9dLZ8qfPjw4cOHb+O7ROH557+ND9rYom3ttyXOx7vgw4cPHz58E19SrLQcWwBxz8nzKOGxyB4fPnz48OF7ge/ees9LijYUuDQY2pj+XyIDfPjw4cOH7zW+rWjIOfLm9AXr0kjAhw8fPnz47nw5R37jvNm8bUfbyqB8GqLr4MOHDx8+fE8mAD/bxz45/x5MJKF8+4TbNjh8+PDhw4cv4Psbh1T9xVhui3sAAAAASUVORK5CYII=" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
