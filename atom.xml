@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.loveyx815.cn/"/>
-  <updated>2020-04-23T10:53:20.447Z</updated>
+  <updated>2020-04-28T09:26:58.430Z</updated>
   <id>http://blog.loveyx815.cn/</id>
   
   <author>
@@ -15,6 +15,34 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>Java并发</title>
+    <link href="http://blog.loveyx815.cn/2020/04/24/summary/%E5%B9%B6%E5%8F%91/Java%E5%B9%B6%E5%8F%91/"/>
+    <id>http://blog.loveyx815.cn/2020/04/24/summary/%E5%B9%B6%E5%8F%91/Java%E5%B9%B6%E5%8F%91/</id>
+    <published>2020-04-23T16:00:00.000Z</published>
+    <updated>2020-04-28T09:26:58.430Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Java并发"><a href="#Java并发" class="headerlink" title="Java并发"></a>Java并发</h1><h2 id="一、基础概念"><a href="#一、基础概念" class="headerlink" title="一、基础概念"></a>一、基础概念</h2><p>线程和进程的区别：</p><blockquote><p> 进程是指处于运行过程中的程序，并且具有一定的独立功能。进程是系统进行资源分配和调度的一个单位。当程序进入内存运行时，即为线程。 </p><p>一个进程可以拥有多个线程组合，线程是组成进程的基本单位。</p></blockquote><ol><li><p>线程状态</p><ul><li>New(新创建)</li><li>Runnable（可运行）</li><li>Blocked(被阻塞)</li><li>Waiting(等待)</li><li>Time waiting(计时等待)</li><li>Terminated(被终止)</li></ul><p>下面介绍线程状态的含义：</p><ul><li><strong>新创建线程</strong></li></ul><blockquote><p>用new创建个新线程时，他还未开始运行，表示这还处于新创建的状态。</p></blockquote><ul><li>可运行线程</li></ul><blockquote><p>一旦调用start方法，线程处于runnable状态。一个可运行的线程可能正在运行也可能没有运行。</p></blockquote><ul><li>被阻塞线程和等待线程</li></ul><blockquote><p>当线程处于被等待或者阻塞状态时，暂时不活动，他不运行任何代码，并且只会消耗最小的资源，直到线程调度器重新激活它。</p></blockquote><ul><li>被终止的线程</li></ul><blockquote><p>线程因为run方法执行完毕而自然死亡、因为一个未捕获的异常终止了run方法而意外死亡</p></blockquote><p>线程运行状态图<br><img src="D:%5C%E4%BB%A3%E7%A0%81%E4%B9%8B%E9%81%93%5C%E7%BB%98%E5%9B%BE%5CJava%E7%BA%BF%E7%A8%8B%E8%BF%90%E8%A1%8C%E7%8A%B6%E6%80%81.png" alt="Java线程运行状态"></p></li><li><p>线程属性</p><ul><li>优先级</li></ul><p>默认情况下，一个线程继承他父线程的优先级。每当线程调度器有机会选择新线程时，他首先选择具有较高优先级的线程。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//设置线程的优先级，大小一般1-10</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">setPriority</span><span class="params">(<span class="keyword">int</span> newPriority)</span></span></span><br><span class="line"><span class="function"><span class="comment">//当前线程处于让步状态，会调度其他优先级&gt;=当前优先级的线程</span></span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">yield</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure><ul><li>守护线程</li></ul><p><code>void setDaemon(boolean isDaemon)</code>通过该方法转换成守护线程，守护线程必须在线程启动之前调用。用途就是为其他线程提供服务，当只有守护线程的时候JVM就直接退出了。</p></li><li><p>同步</p></li></ol><ul><li>锁</li></ul><p><strong>ReentrantLock:</strong></p><p>用可重入锁保护代码块</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Lock mylock = <span class="keyword">new</span>  ReentrantLock();</span><br><span class="line">mylock.lock();</span><br><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">finally</span>&#123;</span><br><span class="line">    <span class="comment">//保证资源一定会解锁</span></span><br><span class="line">    mylock.unlock();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><strong>条件对象：</strong></p><p>需要线程安全区域可能还需要一定的条件支持。若一个线程在获得锁之后，一直在等待条件满足才能完成自己的线程，而使条件发生改变的线程正在等待获得锁。那么此时就就产生死锁。</p><p>也就是两个线程互相依赖对方资源。</p><p><strong>解决方案：</strong></p><p>先来了解下<strong>Condition</strong></p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Condition <span class="title">newCondition</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//返回一个与该锁相关的条件对象</span></span></span><br><span class="line"><span class="function"><span class="comment">//对条件对象的操作</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">await</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//将该线程放到条件的等待集合中</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signalAll</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//解除该条件的等待集合中的所有线程的阻塞状态</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">signal</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//从该条件的等待集合中随机选择一个线程，解除其阻塞状态</span></span></span><br></pre></td></tr></table></figure><p><strong>Synchronized</strong></p><p>锁和条件：</p><ul><li><p>锁用来保护代码片段，任何时刻只能有一个线程执行被保护的代码</p></li><li><p>锁可以管理视图进入被保护代码段的线程</p></li><li><p>锁可以拥有一个或多个相关条件对象</p></li><li><p>每个条件对象管理那些已经进入被保护的代码段但还不能运行的线程</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//以下如果当前对象没有获得该锁，会抛出异常</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">notifyAll</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//解除那些在改对象上调用wait方法的线程的阻塞状态。该方法只能在同步方法或同步代码块中调用。</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">notify</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//与上面的不同的是，这个这能随机选择一个线程解除其阻塞状态</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">wait</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//让该线程进入等待状态直到他被通知</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">wait</span><span class="params">(<span class="keyword">long</span> millis)</span></span></span><br><span class="line"><span class="function"><span class="comment">//指定等待多少毫秒</span></span></span><br></pre></td></tr></table></figure></li></ul><p><strong>Volatile：</strong></p><blockquote><p>volatile关键字为实例域的同步访问提供了一共免锁机制。如果声明一个域为volatile，编译器和JVM就知道该域是可能被另一个线程并发更新的。对volatile域变量更新是所有线程共享的域，还可以防止指令重排。</p></blockquote><p>Volatile变量不能提供原子性，在语句执行的过程中不能保证读取、写入不被中断，不能确保线程安全。</p><p><strong>final：</strong></p><p>除了volatile和锁之外能安全的读取一个域，final关键字修饰的域也可以。</p><p><strong>读写锁</strong></p><blockquote><p><strong>ReentrantReadWriteLock</strong>适合读多写少的并发</p></blockquote><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//得到一个可以被多个读操作公用的读锁，会排斥所有的写操作</span></span><br><span class="line"><span class="function">Lock <span class="title">readLock</span><span class="params">()</span></span></span><br><span class="line"><span class="function"><span class="comment">//得到一个写锁，排斥所有的读、写操作</span></span></span><br><span class="line"><span class="function">Lock <span class="title">writeLock</span><span class="params">()</span></span></span><br></pre></td></tr></table></figure><p>如何使用：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">//新建个读写锁对象</span></span><br><span class="line">         ReentrantReadWriteLock reentrantReadWriteLock = <span class="keyword">new</span> ReentrantReadWriteLock();</span><br><span class="line">         <span class="comment">//获取读锁</span></span><br><span class="line">        Lock readLock = reentrantReadWriteLock.readLock();</span><br><span class="line">        <span class="comment">//获取写锁</span></span><br><span class="line">        Lock writeLock = reentrantReadWriteLock.writeLock();</span><br><span class="line"></span><br><span class="line"><span class="comment">//读操作</span></span><br><span class="line">readLock.lock();</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;<span class="keyword">finally</span>&#123;</span><br><span class="line">        readLock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line"><span class="comment">//写操作</span></span><br><span class="line">writeLock.lock();</span><br><span class="line">    <span class="keyword">try</span>&#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;<span class="keyword">finally</span>&#123;</span><br><span class="line">        writeLock.unlock();</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure><p>-</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Java并发&quot;&gt;&lt;a href=&quot;#Java并发&quot; class=&quot;headerlink&quot; title=&quot;Java并发&quot;&gt;&lt;/a&gt;Java并发&lt;/h1&gt;&lt;h2 id=&quot;一、基础概念&quot;&gt;&lt;a href=&quot;#一、基础概念&quot; class=&quot;headerlink&quot; titl
+      
+    
+    </summary>
+    
+    
+      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    
+    
+      <category term="JUC" scheme="http://blog.loveyx815.cn/tags/JUC/"/>
+    
+      <category term="并发" scheme="http://blog.loveyx815.cn/tags/%E5%B9%B6%E5%8F%91/"/>
+    
+  </entry>
   
   <entry>
     <title>Java泛型设计</title>
@@ -560,35 +588,6 @@
       <category term="快捷键" scheme="http://blog.loveyx815.cn/tags/%E5%BF%AB%E6%8D%B7%E9%94%AE/"/>
     
       <category term="常用命令" scheme="http://blog.loveyx815.cn/tags/%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>maven项目pom.xml报错</title>
-    <link href="http://blog.loveyx815.cn/2020/04/19/summary/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/"/>
-    <id>http://blog.loveyx815.cn/2020/04/19/summary/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/</id>
-    <published>2020-04-18T16:00:00.000Z</published>
-    <updated>2020-04-19T09:06:18.844Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="maven项目pom-xml报错"><a href="#maven项目pom-xml报错" class="headerlink" title="maven项目pom.xml报错"></a>maven项目pom.xml报错</h1><blockquote><p>expected START_TAG or END_TAG not TEXT (position: TEXT seen …</dependency>\ua0\r\n &lt;d… @60:11) less… (Ctrl+F1)<br>Inspection info: Inspects a Maven model for resolution problems.</p></blockquote><p>  这种就是从别的地方复制粘贴的dependency时候有空格存在，导致文件识别不了，用IDE查找下空格的位置，删除就可以解决</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;maven项目pom-xml报错&quot;&gt;&lt;a href=&quot;#maven项目pom-xml报错&quot; class=&quot;headerlink&quot; title=&quot;maven项目pom.xml报错&quot;&gt;&lt;/a&gt;maven项目pom.xml报错&lt;/h1&gt;&lt;blockquote&gt;
-&lt;p&gt;e
-      
-    
-    </summary>
-    
-    
-      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
-    
-    
-      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
-    
-      <category term="maven" scheme="http://blog.loveyx815.cn/tags/maven/"/>
     
   </entry>
   
