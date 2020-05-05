@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>Nginx搭建&amp;不同域名代理同一服务器不同服务 | Hexo博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="nginx">
+    <meta name="description" content="Nginx搭建、代理服务一. 环境搭建 下载nginx链接：https:&#x2F;&#x2F;pan.baidu.com&#x2F;s&#x2F;1b6PttHknU6bnxObJIYajyg提取码：ce8y也可以在线安装(我是直接离线安装的)1wget http:&#x2F;&#x2F;nginx.org&#x2F;download&#x2F;nginx-1.14.2.tar.gz 解压下载完后，通过ftp软件把我们刚刚下载的包传到我们的服务器上去">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx搭建&amp;不同域名代理同一服务器不同服务">
+<meta property="og:url" content="http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/index.html">
+<meta property="og:site_name" content="Hexo博客">
+<meta property="og:description" content="Nginx搭建、代理服务一. 环境搭建 下载nginx链接：https:&#x2F;&#x2F;pan.baidu.com&#x2F;s&#x2F;1b6PttHknU6bnxObJIYajyg提取码：ce8y也可以在线安装(我是直接离线安装的)1wget http:&#x2F;&#x2F;nginx.org&#x2F;download&#x2F;nginx-1.14.2.tar.gz 解压下载完后，通过ftp软件把我们刚刚下载的包传到我们的服务器上去">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200505220625535.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200505221824712.png">
+<meta property="og:image" content="https://img-blog.csdnimg.cn/20200505222504238.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+<meta property="article:published_time" content="2020-05-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-05-05T14:54:25.343Z">
+<meta property="article:author" content="Yonggang Shi">
+<meta property="article:tag" content="nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200505220625535.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
+    
+        <link rel="alternate" type="application/atom+xml" title="Hexo博客" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Yonggang Shi</h5>
+          <a href="mailto:xshiyonggang@163.com" title="xshiyonggang@163.com" class="mail">xshiyonggang@163.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rainandsunshine" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/null" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/custom"  >
+                <i class="icon icon-lg icon-link"></i>
+                测试
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">Nginx搭建&amp;不同域名代理同一服务器不同服务</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">Nginx搭建&amp;不同域名代理同一服务器不同服务</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-05-04T16:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-05-05
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/nginx/">nginx</a></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#Nginx搭建、代理服务"><span class="post-toc-number">1.</span> <span class="post-toc-text">Nginx搭建、代理服务</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#一-环境搭建"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">一. 环境搭建</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#二-用一个nginx配置不同域名访问不同服务"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">二.用一个nginx配置不同域名访问不同服务</span></a></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-nginx/2020-05-05-Nginx搭建&amp;不同域名代理同一服务器不同服务"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">Nginx搭建&不同域名代理同一服务器不同服务</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-05-05 00:00:00" datetime="2020-05-04T16:00:00.000Z"  itemprop="datePublished">2020-05-05</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/nginx/">nginx</a></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="Nginx搭建、代理服务"><a href="#Nginx搭建、代理服务" class="headerlink" title="Nginx搭建、代理服务"></a>Nginx搭建、代理服务</h1><h2 id="一-环境搭建"><a href="#一-环境搭建" class="headerlink" title="一. 环境搭建"></a>一. 环境搭建</h2><ol>
+<li>下载nginx<br>链接：<a href="https://pan.baidu.com/s/1b6PttHknU6bnxObJIYajyg" target="_blank" rel="noopener">https://pan.baidu.com/s/1b6PttHknU6bnxObJIYajyg</a><br>提取码：ce8y<br>也可以在线安装(我是直接离线安装的)<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget http://nginx.org/download/nginx-1.14.2.tar.gz</span><br></pre></td></tr></table></figure></li>
+<li>解压<br>下载完后，通过ftp软件把我们刚刚下载的包传到我们的服务器上去<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img-blog.csdnimg.cn/20200505220625535.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">
+                </div>
+                <div class="image-caption">在这里插入图片描述</div>
+            </figure>
+接着我们对该压缩文件进行解压，进入home文件夹（我是把nginx包放在home）<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zxvf nginx-1.13.0.tar.gz</span><br></pre></td></tr></table></figure>
+解压完之后会在出现个nginx文件夹源代码 <code>nginx-1.13.0</code></li>
+<li>编译环境<blockquote>
+<p>在编译之前，我们还得要装一些依赖</p>
+</blockquote>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> nginx环境所需依赖</span></span><br><span class="line">yum -y install pcre*</span><br><span class="line"><span class="meta">#</span><span class="bash"> nginx开启https的依赖</span></span><br><span class="line">yum -y install openssl*</span><br></pre></td></tr></table></figure>
+依赖解决完之后，我们来开始安装：<br>进入刚才解压的文件夹<code>nginx-1.13.0</code>中<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 1.执行文件，检查配置文件是否生效</span></span><br><span class="line">./configure </span><br><span class="line"><span class="meta">#</span><span class="bash"> 2.编译源代码</span></span><br><span class="line">make </span><br><span class="line"><span class="meta">#</span><span class="bash"> 3.安装</span></span><br><span class="line">make install</span><br></pre></td></tr></table></figure>
+到这里，安装应该算基本完事。可以去<code>/usr/local/</code>下面看看是不是多了个<code>nginx</code>的文件夹<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img-blog.csdnimg.cn/20200505221824712.png" alt="在这里插入图片描述" title="">
+                </div>
+                <div class="image-caption">在这里插入图片描述</div>
+            </figure>
+这里就是我们刚刚安装在系统里生成的nginx服务的文件夹了</li>
+<li>运行nginx<br>进入<code>/usr/local/nginx/</code>，直接运行<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 因为nginx默认配置的是80端口，所以在运行前，先确认下服务器的80端口有没有被占用</span></span><br><span class="line">./nginx</span><br></pre></td></tr></table></figure>
+运行完之后，不出意外访问你的服务器ip就可以访问了<figure class="image-bubble">
+                <div class="img-lightbox">
+                    <div class="overlay"></div>
+                    <img src="https://img-blog.csdnimg.cn/20200505222504238.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">
+                </div>
+                <div class="image-caption">在这里插入图片描述</div>
+            </figure>
+<h2 id="二-用一个nginx配置不同域名访问不同服务"><a href="#二-用一个nginx配置不同域名访问不同服务" class="headerlink" title="二.用一个nginx配置不同域名访问不同服务"></a>二.用一个nginx配置不同域名访问不同服务</h2></li>
+</ol>
+<ul>
+<li>场景描述：<blockquote>
+<p>在当前服务器下，有两个域名 <a href="http://www.test1.com" target="_blank" rel="noopener">www.test1.com</a> 和<a href="http://www.test2.com都对这个服务器ip进行绑定。在服务器中搭建服务A、B，在不过代理访问的情况下，我所了解的是不能用两个域名直接就可以访问对应的服务。比如我访问www.test1.com就是A服务，www.test2.com就是B服务。" target="_blank" rel="noopener">www.test2.com都对这个服务器ip进行绑定。在服务器中搭建服务A、B，在不过代理访问的情况下，我所了解的是不能用两个域名直接就可以访问对应的服务。比如我访问www.test1.com就是A服务，www.test2.com就是B服务。</a></p>
+</blockquote>
+</li>
+<li>解决方案：<br>为了解决上述的问题，这时候就得要代理访问了<br>打开<code>/usr/local/nginx/conf/nginx.conf</code>配置文件<br>贴上对应的配置：<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">user  nobody;</span></span><br><span class="line">worker_processes  1;</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">error_log  logs/error.log;</span></span><br><span class="line"><span class="meta">#</span><span class="bash">error_log  logs/error.log  notice;</span></span><br><span class="line"><span class="meta">#</span><span class="bash">error_log  logs/error.log  info;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">pid        logs/nginx.pid;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">events &#123;</span><br><span class="line">    worker_connections  1024;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">http &#123;</span><br><span class="line">    include       mime.types;</span><br><span class="line">    default_type  application/octet-stream;</span><br><span class="line">    </span><br><span class="line">    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '</span><br><span class="line">    #                  '$status $body_bytes_sent "$http_referer" '</span><br><span class="line">    #                  '"$http_user_agent" "$http_x_forwarded_for"';</span><br><span class="line"></span><br><span class="line">    #access_log  logs/access.log  main;</span><br><span class="line"></span><br><span class="line">    sendfile        on;</span><br><span class="line">    #tcp_nopush     on;</span><br><span class="line"></span><br><span class="line">    #keepalive_timeout  0;</span><br><span class="line">    keepalive_timeout  65;</span><br><span class="line"></span><br><span class="line">    #gzip  on;</span><br><span class="line">        # proxy the PHP scripts to Apache listening on 127.0.0.1:80</span><br><span class="line">        #</span><br><span class="line">        #location ~ \.php$ &#123;</span><br><span class="line">        #    proxy_pass   http://127.0.0.1;</span><br><span class="line">        #&#125;</span><br><span class="line"></span><br><span class="line">        # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000</span><br><span class="line">        #</span><br><span class="line">        #location ~ \.php$ &#123;</span><br><span class="line">        #    root           html;</span><br><span class="line">        #    fastcgi_pass   127.0.0.1:9000;</span><br><span class="line">        #    fastcgi_index  index.php;</span><br><span class="line">        #    fastcgi_param  SCRIPT_FILENAME  /scripts$fastcgi_script_name;</span><br><span class="line">        #    include        fastcgi_params;</span><br><span class="line">        #&#125;</span><br><span class="line"></span><br><span class="line">        # deny access to .htaccess files, if Apache's document root</span><br><span class="line">        # concurs with nginx's one</span><br><span class="line">        #</span><br><span class="line">        #location ~ /\.ht &#123;</span><br><span class="line">        #    deny  all;</span><br><span class="line">        #&#125;</span><br><span class="line">    &#125;</span><br><span class="line">    #test1服务</span><br><span class="line">    server &#123;     </span><br><span class="line">                              listen      80;     </span><br><span class="line">                              server_name www.test1.com test1.com;     </span><br><span class="line">                              location / &#123;     </span><br><span class="line">                                          proxy_pass http://ip:9000/A/;     </span><br><span class="line">                              &#125;     </span><br><span class="line">                              error_page  500 502 503 504  /50x.html;   </span><br><span class="line">                              location = /50x.html &#123;       </span><br><span class="line">                                              root  html;     </span><br><span class="line">                              &#125;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">    #test2服务</span><br><span class="line">    server &#123;     </span><br><span class="line">                              listen      80;     </span><br><span class="line">                              server_name www.test2.com test2.com;     </span><br><span class="line">                              location / &#123;     </span><br><span class="line">                                          proxy_pass http://ip:9002/B/;     </span><br><span class="line">                              &#125;     </span><br><span class="line">                              error_page  500 502 503 504  /50x.html;   </span><br><span class="line">                              location = /50x.html &#123;       </span><br><span class="line">                                              root  html;     </span><br><span class="line">                              &#125;</span><br><span class="line">                              </span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    # another virtual host using mix of IP-, name-, and port-based configuration</span><br><span class="line">    #</span><br><span class="line">    #server &#123;</span><br><span class="line">    #    listen       8000;</span><br><span class="line">    #    listen       somename:8080;</span><br><span class="line">    #    server_name  somename  alias  another.alias;</span><br><span class="line"></span><br><span class="line">    #    location / &#123;</span><br><span class="line">    #        root   html;</span><br><span class="line">    #        index  index.html index.htm;</span><br><span class="line">    #    &#125;</span><br><span class="line">    #&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">   </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>通过两个<code>server</code>的配置，可以对两个域名进行代理。</p>
+<ul>
+<li>listen      代理对外暴露的端口（默认80）</li>
+<li>server_name  你的域名访问的名称（所以在这里的<a href="http://www.test1.com能访问到我们要代理的地方）" target="_blank" rel="noopener">www.test1.com能访问到我们要代理的地方）</a></li>
+<li>proxy_pass  我们要代理的url</li>
+</ul>
+<p>保存好配置文件后，在<code>nginx/sbin/</code>重新运行下nginx<code>./nginx -s reload</code>，这样我们的域名映射服务的需求就算完成了。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-05-05T14:54:25.343Z" itemprop="dateUpdated">2020-05-05 22:54:25</time>
+</span><br>
+
+
+        
+        这里可以写作者留言，标签和 hexo 中所有变量及辅助函数等均可调用，示例：<a href="/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&amp;%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" target="_blank" rel="external">http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&amp;%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="http://blog.loveyx815.cn">
+            <img src="/img/avatar.jpg" alt="Yonggang Shi">
+            Yonggang Shi
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/nginx/" rel="tag">nginx</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&title=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&title=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/04/24/summary/%E5%B9%B6%E5%8F%91/Java%E5%B9%B6%E5%8F%91/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Java并发</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license noopener" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Yonggang Shi &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&title=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&title=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《Nginx搭建&不同域名代理同一服务器不同服务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,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" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>
