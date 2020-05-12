@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html>
+<head>
+    
+
+    
+
+    
+
+
+
+    <meta charset="utf-8">
+    
+    
+    
+    
+    <title>JVM-类加载机制初识 | Poet博客</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    
+    <meta name="theme-color" content="#3F51B5">
+    
+    
+    <meta name="keywords" content="Java开发总结,JVM">
+    <meta name="description" content="JVM-类加载机制初识1. 什么是类加载机制？ 我们所写的Java代码在经过编译后悔产生对应的class字节码文件，JVM把class文件加载到内存中，对数据进行校验、转换解析和初始化过程，最终形成可以被JVM直接使用的Java类型。   类加载的时机  整个的生命周期：加载-验证-准备-解析-初始化-使用-卸载 解析的过程不一定会按部就班的按照上面的循序执行，有可能会在初始化阶段之后执行（通过动">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM-类加载机制初识">
+<meta property="og:url" content="http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/index.html">
+<meta property="og:site_name" content="Poet博客">
+<meta property="og:description" content="JVM-类加载机制初识1. 什么是类加载机制？ 我们所写的Java代码在经过编译后悔产生对应的class字节码文件，JVM把class文件加载到内存中，对数据进行校验、转换解析和初始化过程，最终形成可以被JVM直接使用的Java类型。   类加载的时机  整个的生命周期：加载-验证-准备-解析-初始化-使用-卸载 解析的过程不一定会按部就班的按照上面的循序执行，有可能会在初始化阶段之后执行（通过动">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-05-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2020-05-11T15:08:22.522Z">
+<meta property="article:author" content="Yonggang Shi">
+<meta property="article:tag" content="Java开发总结">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+    
+        <link rel="alternate" type="application/atom+xml" title="Poet博客" href="/atom.xml">
+    
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
+    <script>window.lazyScripts=[]</script>
+
+    <!-- custom head -->
+    
+
+<meta name="generator" content="Hexo 4.2.0"></head>
+
+<body>
+    <div id="loading" class="active"></div>
+
+    <aside id="menu" class="hide" >
+  <div class="inner flex-row-vertical">
+    <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menu-off">
+        <i class="icon icon-lg icon-close"></i>
+    </a>
+    <div class="brand-wrap" style="background-image:url(/img/brand.jpg)">
+      <div class="brand">
+        <a href="/" class="avatar waves-effect waves-circle waves-light">
+          <img src="/img/avatar.jpg">
+        </a>
+        <hgroup class="introduce">
+          <h5 class="nickname">Yonggang Shi</h5>
+          <a href="mailto:xshiyonggang@163.com" title="xshiyonggang@163.com" class="mail">xshiyonggang@163.com</a>
+        </hgroup>
+      </div>
+    </div>
+    <div class="scroll-wrap flex-col">
+      <ul class="nav">
+        
+            <li class="waves-block waves-effect">
+              <a href="/"  >
+                <i class="icon icon-lg icon-home"></i>
+                主页
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/archives"  >
+                <i class="icon icon-lg icon-archives"></i>
+                Archives
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/tags"  >
+                <i class="icon icon-lg icon-tags"></i>
+                Tags
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/categories"  >
+                <i class="icon icon-lg icon-th-list"></i>
+                Categories
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="https://github.com/rainandsunshine" target="_blank" >
+                <i class="icon icon-lg icon-github"></i>
+                Github
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/null" target="_blank" >
+                <i class="icon icon-lg icon-weibo"></i>
+                Weibo
+              </a>
+            </li>
+        
+            <li class="waves-block waves-effect">
+              <a href="/custom"  >
+                <i class="icon icon-lg icon-link"></i>
+                测试
+              </a>
+            </li>
+        
+      </ul>
+    </div>
+  </div>
+</aside>
+
+    <main id="main">
+        <header class="top-header" id="header">
+    <div class="flex-row">
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light on" id="menu-toggle">
+          <i class="icon icon-lg icon-navicon"></i>
+        </a>
+        <div class="flex-col header-title ellipsis">JVM-类加载机制初识</div>
+        
+        <div class="search-wrap" id="search-wrap">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="back">
+                <i class="icon icon-lg icon-chevron-left"></i>
+            </a>
+            <input type="text" id="key" class="search-input" autocomplete="off" placeholder="Search">
+            <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="search">
+                <i class="icon icon-lg icon-search"></i>
+            </a>
+        </div>
+        
+        
+        <a href="javascript:;" class="header-icon waves-effect waves-circle waves-light" id="menuShare">
+            <i class="icon icon-lg icon-share-alt"></i>
+        </a>
+        
+    </div>
+</header>
+<header class="content-header post-header">
+
+    <div class="container fade-scale">
+        <h1 class="title">JVM-类加载机制初识</h1>
+        <h5 class="subtitle">
+            
+                <time datetime="2020-05-09T16:00:00.000Z" itemprop="datePublished" class="page-time">
+  2020-05-10
+</time>
+
+
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/">Java开发总结</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/JVM/">JVM</a></li></ul></li></ul>
+
+            
+        </h5>
+    </div>
+
+    
+
+
+</header>
+
+
+<div class="container body-wrap">
+    
+    <aside class="post-widget">
+        <nav class="post-toc-wrap post-toc-shrink" id="post-toc">
+            <h4>TOC</h4>
+            <ol class="post-toc"><li class="post-toc-item post-toc-level-1"><a class="post-toc-link" href="#JVM-类加载机制初识"><span class="post-toc-number">1.</span> <span class="post-toc-text">JVM-类加载机制初识</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#1-什么是类加载机制？"><span class="post-toc-number">1.1.</span> <span class="post-toc-text">1. 什么是类加载机制？</span></a></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#2-类加载的过程"><span class="post-toc-number">1.2.</span> <span class="post-toc-text">2. 类加载的过程</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-加载"><span class="post-toc-number">1.2.1.</span> <span class="post-toc-text">1. 加载</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-验证"><span class="post-toc-number">1.2.2.</span> <span class="post-toc-text">2. 验证</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#3-准备"><span class="post-toc-number">1.2.3.</span> <span class="post-toc-text">3. 准备</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#4-解析"><span class="post-toc-number">1.2.4.</span> <span class="post-toc-text">4. 解析</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#5-初始化"><span class="post-toc-number">1.2.5.</span> <span class="post-toc-text">5. 初始化</span></a></li></ol></li><li class="post-toc-item post-toc-level-2"><a class="post-toc-link" href="#3-类加载器"><span class="post-toc-number">1.3.</span> <span class="post-toc-text">3. 类加载器</span></a><ol class="post-toc-child"><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#1-类与类加载器"><span class="post-toc-number">1.3.1.</span> <span class="post-toc-text">1. 类与类加载器</span></a></li><li class="post-toc-item post-toc-level-3"><a class="post-toc-link" href="#2-双亲委派模型"><span class="post-toc-number">1.3.2.</span> <span class="post-toc-text">2. 双亲委派模型</span></a></li></ol></li></ol></li></ol>
+        </nav>
+    </aside>
+
+
+<article id="post-JVM/JVM-类加载机制初识"
+  class="post-article article-type-post fade" itemprop="blogPost">
+
+    <div class="post-card">
+        <h1 class="post-card-title">JVM-类加载机制初识</h1>
+        <div class="post-meta">
+            <time class="post-time" title="2020-05-10 00:00:00" datetime="2020-05-09T16:00:00.000Z"  itemprop="datePublished">2020-05-10</time>
+
+            
+	<ul class="article-category-list"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/">Java开发总结</a><ul class="article-category-list-child"><li class="article-category-list-item"><a class="article-category-list-link" href="/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/JVM/">JVM</a></li></ul></li></ul>
+
+
+
+            
+<span id="busuanzi_container_page_pv" title="文章总阅读量" style='display:none'>
+    <i class="icon icon-eye icon-pr"></i><span id="busuanzi_value_page_pv"></span>
+</span>
+
+
+        </div>
+        <div class="post-content" id="post-content" itemprop="postContent">
+            <h1 id="JVM-类加载机制初识"><a href="#JVM-类加载机制初识" class="headerlink" title="JVM-类加载机制初识"></a>JVM-类加载机制初识</h1><h2 id="1-什么是类加载机制？"><a href="#1-什么是类加载机制？" class="headerlink" title="1. 什么是类加载机制？"></a>1. 什么是类加载机制？</h2><blockquote>
+<p>我们所写的Java代码在经过编译后悔产生对应的class字节码文件，JVM把class文件加载到内存中，对数据进行校验、转换解析和初始化过程，最终形成可以被JVM直接使用的Java类型。</p>
+</blockquote>
+<ul>
+<li>类加载的时机</li>
+</ul>
+<p>整个的生命周期：<code>加载</code>-<code>验证</code>-<code>准备</code>-<code>解析</code>-<code>初始化</code>-<code>使用</code>-<code>卸载</code></p>
+<p><code>解析</code>的过程不一定会按部就班的按照上面的循序执行，有可能会在<code>初始化</code>阶段之后执行（通过动态绑定可以实现）</p>
+<p><strong>需要开始类加载的5种情况：</strong></p>
+<ol>
+<li>遇到new、getstatic、putstatic、invokestatic这4条字节码指定时，若类没有进行初始化，则先触发初始化（如：使用new实例化对象、读取或设置一个类的静态字段，被final修饰的、在编译期就放入了常量池的静态字段除外，以及调用一个类的静态方法的时候）</li>
+<li>使用<code>java.lang.refleact</code>反射，如果该类灭有初始化会进行初始化</li>
+<li>初始化子类发现其父类还没初始化，则需要触发父类的初始化</li>
+<li>JVM启动时，用户需要制定一个要执行的主类（包含main方法的那个类），JVM会先初始化这个主类。</li>
+<li>如果一个<code>java.lang.invoke.MethodHeandle</code>实例最后解析结果<code>REF_getStatic</code>、<code>REF_putStatic</code>、<code>REF_invokeStatic</code> 的方法句柄，且这个方法句柄所对应的类没有进行过初始化，则需要进行初始化。</li>
+</ol>
+<h2 id="2-类加载的过程"><a href="#2-类加载的过程" class="headerlink" title="2. 类加载的过程"></a>2. 类加载的过程</h2><h3 id="1-加载"><a href="#1-加载" class="headerlink" title="1. 加载"></a>1. 加载</h3><ol>
+<li>通过一个类全限定名来获取定义此类的二进制字节流（<code>可以通过多种方式，如反射、网络、其他文件JSP这样等等方式去获取字节流</code>）</li>
+<li>将此字节流所代表的静态存储结构转化为方法区的运行时数据结构</li>
+<li>在内存中生成一个代表这个类的<code>java.lang.Class</code>对象（Hotspot中该对象是分配在方法区中），作为方法区这个类的各种数据的访问入口</li>
+</ol>
+<h3 id="2-验证"><a href="#2-验证" class="headerlink" title="2. 验证"></a>2. 验证</h3><blockquote>
+<p>验证是连接的第一阶段，目的是确保class文件的字节流的信息符合JVM的规范，不会危害到JVM。像数组越界操作之类的危害代码，可以手动植入到class文件中。</p>
+</blockquote>
+<ol>
+<li>文件格式验证</li>
+</ol>
+<p>验证字节流是否符合Class文件格式的规范，并且能够被当前版本的JVM处理</p>
+<ol start="2">
+<li>元数据验证</li>
+</ol>
+<p>对字节码描述的信息进行语义分析，保证符合Java语言规范的要求。</p>
+<ol start="3">
+<li>字节码验证</li>
+</ol>
+<p>通过数据流和控制流的分析，确定程序语义是合法的、符合逻辑。这块的验证工作很复杂，JDK1.6后进行优化，对方法体的<code>Code</code>属性的属性表中增加了一个<code>StackMapTable</code>属性，记录了按照控制流拆分的代码块在开始时本地变量表和操作栈中应有的状态（验证无需进行推导验证只要检查该属性即可）</p>
+<h3 id="3-准备"><a href="#3-准备" class="headerlink" title="3. 准备"></a>3. 准备</h3><p>为类变量分配内存并设置类变量（<code>static</code>修饰的变量）初始值。</p>
+<h3 id="4-解析"><a href="#4-解析" class="headerlink" title="4. 解析"></a>4. 解析</h3><p>将常量池内的符号引用替换为直接引用。</p>
+<p><strong>符号引用：</strong></p>
+<blockquote>
+<p>以一符号来描述所引用的目标，符号可以是任何形式的字面量。符号引用的目标不一定会加载入内存，可能不存在，定义在Class文件格式中</p>
+</blockquote>
+<p><strong>直接引用：</strong></p>
+<blockquote>
+<p>直接指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。直接引用的目标一定已经在内存中。</p>
+</blockquote>
+<p><code>细节待补充</code>！！！</p>
+<h3 id="5-初始化"><a href="#5-初始化" class="headerlink" title="5. 初始化"></a>5. 初始化</h3><blockquote>
+<p>在准备阶段，变量已经赋过一次系统要求的初始值（数据类型的默认值），在初始化阶段，根据程序中自定义的变量属性进行赋值。实际上就是执行类构造器<clinit>()方法。</p>
+</blockquote>
+<ul>
+<li><clinit>()</li>
+</ul>
+<p><clinit>()方法由编译器自动收集类中的所有类变量的赋值动作和静态语句块（ <code>static{}</code> ）中的语句合并产生，收集的顺序是由语句在原文件中出现的顺序决定。静态语句块中只能访问到定义在静态语句块之前的变量，定义在他之后的变量，在前面的静态语句块可以赋值但不能访问。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Test</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        i = <span class="number">0</span>; <span class="comment">//正常编译通过</span></span><br><span class="line">        System.out.println(i);<span class="comment">//编译报错，非法向前引用</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">int</span> i = <span class="number">1</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>&lt;clinit&gt;()</code>方法不需要显示调用父类构造器，JVM会保证父类的</p>
+<p><code>&lt;clinit&gt;()</code> 先执行。接口中<code>&lt;clinit&gt;()</code>只会在用到父接口的变量的时候才会去初始化<code>&lt;clinit&gt;()</code>。<code>&lt;clinit&gt;()</code>是现线程安全的，同一类初始化同时只会被一个线程操作。</p>
+<h2 id="3-类加载器"><a href="#3-类加载器" class="headerlink" title="3. 类加载器"></a>3. 类加载器</h2><blockquote>
+<p>让应用程序自己决定如何去获取所需要的类（<code>通过一个类的全限定名来获取描述此类的二进制字节流</code>），在JVM外部实现这动作，这就是类加载器所做的工作。</p>
+</blockquote>
+<h3 id="1-类与类加载器"><a href="#1-类与类加载器" class="headerlink" title="1. 类与类加载器"></a>1. 类与类加载器</h3><blockquote>
+<p>对于任何一个类，需要有加载它的类加载器和这个类一同确立其在JVM中的唯一性。比较两个类是否相等，前提是两个类是同一类加载器所加载的。</p>
+</blockquote>
+<h3 id="2-双亲委派模型"><a href="#2-双亲委派模型" class="headerlink" title="2. 双亲委派模型"></a>2. 双亲委派模型</h3><ul>
+<li>启动类加载器（Bootstrap ClassLoader）</li>
+</ul>
+<p>负责将放在<code>jdk\lib</code>目录下或者被<code>-Xbootclasspath</code>参数指定的路径中的，并且是JVM指定的名称类型加载到虚拟机内存中。</p>
+<ul>
+<li>扩展类加载器（Extension Classloader）</li>
+</ul>
+<p>负责加载<code>jdk\lib\ext</code>下或者被<code>java.ext.dirs</code>系统变量所指定的额路径的所有类库。</p>
+<ul>
+<li>应用程序类加载器</li>
+</ul>
+<p>该加载器是<code>ClassLoader</code> 中<code>getSystemClassLoader()</code>方法的返回值。负责加载用户类路径<code>ClassPath</code>上所指定的类库。</p>
+<ul>
+<li>双亲委派</li>
+</ul>
+<blockquote>
+<p>如果一个类加载器收到类加载请求，他首先去吧请求委派给父类加载器去完成，当父类加载器无法加载或者抛出异常时，子类加载器才会去尝试加载。</p>
+</blockquote>
+<p>好处：维护了Java程序的稳定运作，避免多个类加载器调用同一个类A，会产生多个类A，会造成混乱。</p>
+
+        </div>
+
+        <blockquote class="post-copyright">
+    
+    <div class="content">
+        
+<span class="post-time">
+    Last updated: <time datetime="2020-05-11T15:08:22.522Z" itemprop="dateUpdated">2020-05-11 23:08:22</time>
+</span><br>
+
+
+        
+        这里可以写作者留言，标签和 hexo 中所有变量及辅助函数等均可调用，示例：<a href="/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/" target="_blank" rel="external">http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/</a>
+        
+    </div>
+    
+    <footer>
+        <a href="http://blog.loveyx815.cn">
+            <img src="/img/avatar.jpg" alt="Yonggang Shi">
+            Yonggang Shi
+        </a>
+    </footer>
+</blockquote>
+
+        
+<div class="page-reward">
+    <a id="rewardBtn" href="javascript:;" class="page-reward-btn waves-effect waves-circle waves-light">赏</a>
+</div>
+
+
+
+        <div class="post-footer">
+            
+	<ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/JVM/" rel="tag">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/" rel="tag">Java开发总结</a></li></ul>
+
+
+            
+<div class="page-share-wrap">
+    
+
+<div class="page-share" id="pageShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&title=《JVM-类加载机制初识》 — Poet博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&title=《JVM-类加载机制初识》 — Poet博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《JVM-类加载机制初识》 — Poet博客&url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+
+    <a href="javascript:;" id="shareFab" class="page-share-fab waves-effect waves-circle">
+        <i class="icon icon-share-alt icon-lg"></i>
+    </a>
+</div>
+
+
+
+        </div>
+    </div>
+
+    
+<nav class="post-nav flex-row flex-justify-between flex-row-reverse">
+  
+
+  
+    <div class="waves-block waves-effect next">
+      <a href="/2020/05/05/nginx/2020-05-05-Nginx%E6%90%AD%E5%BB%BA&%E4%B8%8D%E5%90%8C%E5%9F%9F%E5%90%8D%E4%BB%A3%E7%90%86%E5%90%8C%E4%B8%80%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8D%E5%90%8C%E6%9C%8D%E5%8A%A1/" id="post-next" class="post-nav-link">
+        <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
+        <h4 class="title">Nginx搭建&amp;不同域名代理同一服务器不同服务</h4>
+      </a>
+    </div>
+  
+</nav>
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</article>
+
+<div id="reward" class="page-modal reward-lay">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <h3 class="reward-title">
+        <i class="icon icon-quote-left"></i>
+        谢谢大爷~
+        <i class="icon icon-quote-right"></i>
+    </h3>
+    <div class="reward-content">
+        
+        <div class="reward-code">
+            <img id="rewardCode" src="/img/wechat.jpg" alt="打赏二维码">
+        </div>
+        
+        <label class="reward-toggle">
+            <input id="rewardToggle" type="checkbox" class="reward-toggle-check"
+                data-wechat="/img/wechat.jpg" data-alipay="/img/alipay.jpg">
+            <div class="reward-toggle-ctrol">
+                <span class="reward-toggle-item wechat">微信</span>
+                <span class="reward-toggle-label"></span>
+                <span class="reward-toggle-item alipay">支付宝</span>
+            </div>
+        </label>
+        
+    </div>
+</div>
+
+
+
+</div>
+
+        <footer class="footer">
+    <div class="top">
+        
+<p>
+    <span id="busuanzi_container_site_uv" style='display:none'>
+        站点总访客数：<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span id="busuanzi_container_site_pv" style='display:none'>
+        站点总访问量：<span id="busuanzi_value_site_pv"></span>
+    </span>
+</p>
+
+
+        <p>
+            
+                <span><a href="/atom.xml" target="_blank" class="rss" title="rss"><i class="icon icon-lg icon-rss"></i></a></span>
+            
+            <span>This blog is licensed under a <a rel="license noopener" href="https://creativecommons.org/licenses/by/4.0/" target="_blank">Creative Commons Attribution 4.0 International License</a>.</span>
+        </p>
+    </div>
+    <div class="bottom">
+        <p><span>Yonggang Shi &copy; 2015 - 2020</span>
+            <span>
+                
+                Power by <a href="http://hexo.io/" target="_blank">Hexo</a> Theme <a href="https://github.com/yscoder/hexo-theme-indigo" target="_blank">indigo</a>
+            </span>
+        </p>
+    </div>
+</footer>
+
+    </main>
+    <div class="mask" id="mask"></div>
+<a href="javascript:;" id="gotop" class="waves-effect waves-circle waves-light"><span class="icon icon-lg icon-chevron-up"></span></a>
+
+
+
+<div class="global-share" id="globalShare">
+    <ul class="reset share-icons">
+      <li>
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&title=《JVM-类加载机制初识》 — Poet博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+          <i class="icon icon-weibo"></i>
+        </a>
+      </li>
+      <li>
+        <a class="weixin share-sns wxFab" href="javascript:;" data-title="微信">
+          <i class="icon icon-weixin"></i>
+        </a>
+      </li>
+      <li>
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&title=《JVM-类加载机制初识》 — Poet博客&source=" data-title=" QQ">
+          <i class="icon icon-qq"></i>
+        </a>
+      </li>
+      <li>
+        <a class="facebook share-sns" target="_blank" href="https://www.facebook.com/sharer/sharer.php?u=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/" data-title=" Facebook">
+          <i class="icon icon-facebook"></i>
+        </a>
+      </li>
+      <li>
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《JVM-类加载机制初识》 — Poet博客&url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+          <i class="icon icon-twitter"></i>
+        </a>
+      </li>
+      <li>
+        <a class="google share-sns" target="_blank" href="https://plus.google.com/share?url=http://blog.loveyx815.cn/2020/05/10/JVM/JVM-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E5%88%9D%E8%AF%86/" data-title=" Google+">
+          <i class="icon icon-google-plus"></i>
+        </a>
+      </li>
+    </ul>
+ </div>
+
+
+<div class="page-modal wx-share" id="wxShare">
+    <a class="close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQ4AAAEOCAAAAABd2qZ5AAAD6klEQVR42u3aS47bQAwFQN//0g6QXYBIfo9seQKktBrIVn9KA9Bk8/WKr/fv61Ve79F19Ww+12bNOHDgwIFjz5Ev7goo+fRqcck3k/v34yR7xIEDBw4cZzlmC73nuCLLuduttkEXBw4cOHD8LEeS4OWJUx68W+58VThw4MCB42c58iLdqRHuE7DZSnDgwIEDx3c48kOgU+G2PXDKS4RfqpXiwIEDB440QtXh89//+8H+Dhw4cODAEYeo+4CUfydJC0+VF1e7w4EDBw4chwJFso18gs0G7pnyxohNiwMOHDhw4DjF0Q5xqtHtfj3t67kfZ5jI4cCBAweORYkwaUdoD4QSsrwBYvOzoGbCgQMHDhwlxyxQzULgpjVhk17miR8OHDhw4Nhz5KErT+SSBCy/07a7tdCX4RYHDhw4cIw42iOcduL82Cm/n3xzltThwIEDB449x2a42bNPJF1500M+Ag4cOHDg2HBsQmYy8SzUJU0Ps4a5D68KBw4cOHAsOE4lTi1B8tSmtW4WnnHgwIEDxymOsw0E+bX/jZAfMkUhHAcOHDhwrDmeCGnJUpK5Zk9tXgYOHDhw4Nhz7I+a2sXNjp3alCwJrn9ZFQ4cOHDg+ArH7GqLgMnx0nNrLgItDhw4cOAIONp0a7bVWQNEHiwPpIs4cODAgeMQR/JpG9JOJWBtw0S+/g8pHA4cOHDgGHHMwnBb5msD7Swkt0/VLxsHDhw4cDxWVUuYzpYF9wlkm77iwIEDB47ZLvKD/02w3LQ+tDMmK49a5XDgwIEDx4gjL64lBb625Jec+LTc0YaTiikOHDhw4Fhw5C0Is4JgsoF85HZVeQERBw4cOHDsOdpj/mTp+2aFPHy2bRkf7uDAgQMHjkMcSTEuT7RmLQ77AHwgacSBAwcOHGfqb682XM2ANknaLG3LS5mX/yk4cODAgaPk2BTmZqlX0iQxC8azvdQZKg4cOHDgSGto50pscRHwFNCp4iYOHDhw4HiOI99MW/LbwyV8eXnxlU+AAwcOHDiC8TdJUXtMlaR8+6a6pGR5SYYDBw4cOA5x3AezthUg32QL3bYm1I0ROHDgwIFjzZFPnAfUtpy3Z23Hx4EDBw4cz3G8y2sTStsNJy9mnyL+MT4OHDhw4Fhz5NeptG1WRjzVJIEDBw4cOL7DsWlBaNOkzZZmRcw2dcSBAwcOHKc4Zu1o9wvap3ZRdXPEd3kHBw4cOHB8kaNNkNrgl294cyj14cXgwIEDB46vc8yKgC1ZHSDjgP1hZBw4cODAcYjjbCFvH25nTQ+zV/J4XRMHDhw4/jOO9iwmSYfyYmKbtrWtEvnRFA4cOHDgWHP8Avjfphilm4S7AAAAAElFTkSuQmCC" alt="微信分享二维码">
+</div>
+
+
+
+
+    <script src="//cdn.bootcss.com/node-waves/0.7.4/waves.min.js"></script>
+<script>
+var BLOG = { ROOT: '/', SHARE: true, REWARD: true };
+
+
+</script>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/main.min.js"></script>
+
+
+<div class="search-panel" id="search-panel">
+    <ul class="search-result" id="search-result"></ul>
+</div>
+<template id="search-tpl">
+<li class="item">
+    <a href="{path}" class="waves-block waves-effect">
+        <div class="title ellipsis" title="{title}">{title}</div>
+        <div class="flex-row flex-middle">
+            <div class="tags ellipsis">
+                {tags}
+            </div>
+            <time class="flex-col time">{date}</time>
+        </div>
+    </a>
+</li>
+</template>
+
+<script src="//unpkg.com/hexo-theme-material-indigo@latest/js/search.min.js" async></script>
+
+
+
+
+
+
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+<script>
+(function() {
+    var OriginTitile = document.title, titleTime;
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            document.title = '死鬼去哪里了！';
+            clearTimeout(titleTime);
+        } else {
+            document.title = '(つェ⊂)咦!又好了!';
+            titleTime = setTimeout(function() {
+                document.title = OriginTitile;
+            },2000);
+        }
+    });
+})();
+</script>
+
+
+
+</body>
+</html>

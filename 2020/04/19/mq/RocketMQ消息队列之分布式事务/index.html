@@ -14,7 +14,7 @@
     
     
     
-    <title>RocketMQ消息队列-分布式事务 | Hexo博客</title>
+    <title>RocketMQ消息队列-分布式事务 | Poet博客</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     
     <meta name="theme-color" content="#3F51B5">
@@ -25,7 +25,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="RocketMQ消息队列-分布式事务">
 <meta property="og:url" content="http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/index.html">
-<meta property="og:site_name" content="Hexo博客">
+<meta property="og:site_name" content="Poet博客">
 <meta property="og:description" content="RocketMQ消息队列[TOC] 基于RocketMQ的分布式事务 在介绍RocketMQ的分布式事务之前，先来了解下什么事分布式事务？  一、分布式事务 简介  在分布式系统中，不止使用一个数据库，比如订单系统使用db_order数据库，产品系统使用的是db_product数据库，在订单系统中只能保证订单相关操作的事务，在产品系统中只能保证产品相关操作的事务。比如：如果在订单系统中进行生成订单">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="https://img-blog.csdnimg.cn/20200206105854909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
@@ -42,7 +42,7 @@
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img-blog.csdnimg.cn/20200206105854909.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70">
     
-        <link rel="alternate" type="application/atom+xml" title="Hexo博客" href="/atom.xml">
+        <link rel="alternate" type="application/atom+xml" title="Poet博客" href="/atom.xml">
     
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="//unpkg.com/hexo-theme-material-indigo@latest/css/style.css">
@@ -415,7 +415,7 @@
 <div class="page-share" id="pageShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Poet博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -425,7 +425,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&source=" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Poet博客&source=" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
@@ -435,7 +435,7 @@
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Poet博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
@@ -472,9 +472,9 @@
 
   
     <div class="waves-block waves-effect next">
-      <a href="/2020/04/19/summary/Java%E5%BC%82%E5%B8%B8/" id="post-next" class="post-nav-link">
+      <a href="/2020/04/19/JVM/JVM%E5%A4%8D%E4%B9%A0/" id="post-next" class="post-nav-link">
         <div class="tips">Next <i class="icon icon-angle-right icon-lg icon-pl"></i></div>
-        <h4 class="title">Java异常-受查与非受查</h4>
+        <h4 class="title">JVM复习</h4>
       </a>
     </div>
   
@@ -574,7 +574,7 @@
 <div class="global-share" id="globalShare">
     <ul class="reset share-icons">
       <li>
-        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
+        <a class="weibo share-sns" target="_blank" href="http://service.weibo.com/share/share.php?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Poet博客&pic=http://blog.loveyx815.cn/img/avatar.jpg" data-title="微博">
           <i class="icon icon-weibo"></i>
         </a>
       </li>
@@ -584,7 +584,7 @@
         </a>
       </li>
       <li>
-        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Hexo博客&source=" data-title=" QQ">
+        <a class="qq share-sns" target="_blank" href="http://connect.qq.com/widget/shareqq/index.html?url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&title=《RocketMQ消息队列-分布式事务》 — Poet博客&source=" data-title=" QQ">
           <i class="icon icon-qq"></i>
         </a>
       </li>
@@ -594,7 +594,7 @@
         </a>
       </li>
       <li>
-        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Hexo博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
+        <a class="twitter share-sns" target="_blank" href="https://twitter.com/intent/tweet?text=《RocketMQ消息队列-分布式事务》 — Poet博客&url=http://blog.loveyx815.cn/2020/04/19/mq/RocketMQ%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/&via=http://blog.loveyx815.cn" data-title=" Twitter">
           <i class="icon icon-twitter"></i>
         </a>
       </li>
