@@ -6,7 +6,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://blog.loveyx815.cn/"/>
-  <updated>2020-05-11T15:08:22.522Z</updated>
+  <updated>2020-05-13T18:40:45.189Z</updated>
   <id>http://blog.loveyx815.cn/</id>
   
   <author>
@@ -15,6 +15,37 @@
   </author>
   
   <generator uri="https://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>JVM-Java内存模型初识</title>
+    <link href="http://blog.loveyx815.cn/2020/05/13/JVM/JVM-Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%88%9D%E8%AF%86/"/>
+    <id>http://blog.loveyx815.cn/2020/05/13/JVM/JVM-Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%88%9D%E8%AF%86/</id>
+    <published>2020-05-12T16:00:00.000Z</published>
+    <updated>2020-05-13T18:40:45.189Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Java内存模型（JMM）"><a href="#Java内存模型（JMM）" class="headerlink" title="Java内存模型（JMM）"></a>Java内存模型（JMM）</h1><blockquote><p>JMM 可以屏蔽掉各种硬件和操作系统的内存访问差异，让Java程序在各个平台下都能达到一致的内存访问效果。</p></blockquote><h2 id="1-主内存与工作内存"><a href="#1-主内存与工作内存" class="headerlink" title="1. 主内存与工作内存"></a>1. 主内存与工作内存</h2><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://gitee.com/GAO13/PicGoRepo/raw/master/JMM内存图.jpg" alt="" title="">                </div>                <div class="image-caption"></div>            </figure><blockquote><p>JMM规定所有的变量（包括实例变量、静态字段、构成数组对象的元素）都存储在主内存中，每个线程还有自己工作内存。线程工作内存保存了被该线程使用的变量的主内存的副本拷贝（不会拷贝整个对象，可能拷贝的是对象的引用、所对象访问的字段），线程对变量的操作都是在工作内存中进行，线程之间的值传递需要通过主内存完成。</p></blockquote><h2 id="2-内存间交互操作"><a href="#2-内存间交互操作" class="headerlink" title="2. 内存间交互操作"></a>2. 内存间交互操作</h2><blockquote><p>工作内存和主内存间的交互操作：一个变量如何从主内存拷贝到工作内存，在如何从工作内存同步到主内存。</p></blockquote><p><strong>JMM</strong>中定义了8中原子性操作来完成。</p><table><thead><tr><th>操作</th><th>含义</th><th>作用区域</th><th>作用</th></tr></thead><tbody><tr><td><code>lock</code></td><td>锁定</td><td>主内存变量</td><td>把一个变量标识为一条线程独占状态</td></tr><tr><td><code>unlock</code></td><td>解锁</td><td>主内存变量</td><td>把一个处于锁定的变量释放出来</td></tr><tr><td>read</td><td>读取</td><td>工作内存变量</td><td>把一个变量从主内存传输到线程的工作内存</td></tr><tr><td>load</td><td>载入</td><td>工作内存变量</td><td>把read操作的变量值放入工作内存副本中</td></tr><tr><td>`use</td><td>使用</td><td>工作内存变量</td><td>把工作内存中的一个变量的值传递给执行引擎，当JVM遇到一个需要变量的值得字节码指令时将会执行这个操作</td></tr><tr><td><code>assign</code></td><td>赋值</td><td>工作内存变量</td><td>把从执行引擎接受到的值给工作内存的变量，当JVM遇到一个给变量赋值的额字节码指定时执行该操作</td></tr><tr><td><code>store</code></td><td>存储</td><td>工作内存变量</td><td>把工作内存中的一个变量的值传递到主内存中</td></tr><tr><td><code>write</code></td><td>写入</td><td>主内存变量</td><td>把<code>store</code>操作传递的值放入工作内存的变量中</td></tr></tbody></table><ul><li>变量复制主内存-&gt;工作内存：顺序执行<code>read</code>、<code>load</code></li><li>变量同步工作内存-&gt;主内存：顺序执行store、<code>write</code></li></ul><p>上面两过程不要必须连续执行，只要顺序执行，且每个操作不得单独出现。</p><h2 id="3-Volatile登场"><a href="#3-Volatile登场" class="headerlink" title="3. Volatile登场"></a>3. Volatile登场</h2><ul><li>可见性</li></ul><p><code>volatile</code>修饰的变量，对所有的线程是可见的。即当一个线程修改了该变量，其他线程都是立即可见的。但是，并不表示<code>volatile</code>变量是支持线程安全的。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">volatile</span>  <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">private</span>  <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span>  THREAD_COUNT = <span class="number">30</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">static</span>  <span class="keyword">void</span> <span class="title">increase</span><span class="params">()</span></span>&#123;</span><br><span class="line">        count++;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        Thread[] threads = <span class="keyword">new</span> Thread[THREAD_COUNT];</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span> ;i&lt;THREAD_COUNT;i++)&#123;</span><br><span class="line">            threads[i]= <span class="keyword">new</span> Thread(<span class="keyword">new</span> Runnable() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                    <span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">1000</span>;i++)&#123;</span><br><span class="line">                        increase();</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">            threads[i].start();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//等待所有线程执行完毕</span></span><br><span class="line">        <span class="keyword">while</span> (Thread.activeCount()&gt;<span class="number">1</span>)&#123;</span><br><span class="line">            Thread.yield();</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(count);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure><p>在这里定义了30个线程去累加count，每个线程加1000，理想在并发状态下得到的应该是<code>30000</code>，实际输出来看下</p><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://gitee.com/GAO13/PicGoRepo/raw/master/20200513174944.png" alt="" title="">                </div>                <div class="image-caption"></div>            </figure><p>实际得到的数值会比预计的要小。</p><blockquote><p>由于这里使用<code>count++</code>来累加改变这个<code>volatile</code>变量，而自增操作并不是原子性的，即使<code>count</code>变量是所有线程可见，但不能保证在并发执行运算的时候，非原子性操作一定是读取的和和主内存变量同步的值。</p></blockquote><ul><li>禁止指令重排优化</li></ul><blockquote><p>普通变量仅仅能保证在执行该方法的过程中所有依赖赋值的地方能得到正确的结果，但不能保证程序一定按照代码的顺序执行</p></blockquote><p>看个伪代码</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义一个标识</span></span><br><span class="line"><span class="keyword">boolean</span> flag = <span class="keyword">false</span>;</span><br><span class="line"><span class="comment">//业务代码A</span></span><br><span class="line">service.changeState();</span><br><span class="line"><span class="comment">//业务代码执行完，改变flag</span></span><br><span class="line"> flag = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.....</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//当flag为true时，执行另一段业务B</span></span><br><span class="line"><span class="keyword">while</span>(flag)&#123;</span><br><span class="line">    <span class="comment">//dosomething</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>由于系统有指令优化重排，获取<code>flag=true</code>可能会被提前执行，也就是在<code>业务A</code>没有执行情况下，就已经改变了flag。实际上我们想要的是在<code>业务A</code>执行完之后在区执行<code>flag=true</code>。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//定义一个标识</span></span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag = <span class="keyword">false</span>;</span><br><span class="line"><span class="comment">//业务代码A</span></span><br><span class="line">service.changeState();</span><br><span class="line"><span class="comment">//业务代码执行完，改变flag</span></span><br><span class="line"> flag = <span class="keyword">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.....</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//当flag为true时，执行另一段业务B</span></span><br><span class="line"><span class="keyword">while</span>(flag)&#123;</span><br><span class="line">    <span class="comment">//dosomething</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>加了<code>volatile</code>就可以让代码按序执行</p><h2 id="4-先行发生原则（happents-before）"><a href="#4-先行发生原则（happents-before）" class="headerlink" title="4. 先行发生原则（happents-before）"></a>4. 先行发生原则（happents-before）</h2><blockquote><p>先行发生是JMM中定义的两项操作之间的偏序关系，如果说操作A先行于操作B发生，其实就是说在操作B发生之前，操作A产生的影响能被操作B观察到。</p></blockquote><p>这里的<code>影响</code>包括修改了内存中共享变量的值、发送了消息、调用了方法等。</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//thread A 执行</span></span><br><span class="line">i=<span class="number">1</span>;</span><br><span class="line"><span class="comment">//thread B 执行</span></span><br><span class="line">j=i;</span><br><span class="line"><span class="comment">//thread C 执行</span></span><br><span class="line">i=<span class="number">4</span>;</span><br></pre></td></tr></table></figure><p>假设线程A会先于B执行，那么当只执行线程A、B时，A永远先于B执行，所以<code>j</code>一定等于1。若在A、B之间加入线程C执行，并没有规定C会先于B发生，所以此时<code>j</code>的值就会不确定，线程不安全。</p><p>下面介绍下Java中</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Java内存模型（JMM）&quot;&gt;&lt;a href=&quot;#Java内存模型（JMM）&quot; class=&quot;headerlink&quot; title=&quot;Java内存模型（JMM）&quot;&gt;&lt;/a&gt;Java内存模型（JMM）&lt;/h1&gt;&lt;blockquote&gt;
+&lt;p&gt;JMM 可以屏蔽掉各种硬件
+      
+    
+    </summary>
+    
+    
+      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    
+      <category term="JVM" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/JVM/"/>
+    
+    
+      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    
+      <category term="JVM" scheme="http://blog.loveyx815.cn/tags/JVM/"/>
+    
+  </entry>
   
   <entry>
     <title>JVM-类加载机制初识</title>
@@ -133,6 +164,32 @@
   </entry>
   
   <entry>
+    <title>设计模式-工厂模式</title>
+    <link href="http://blog.loveyx815.cn/2020/04/21/summary/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/"/>
+    <id>http://blog.loveyx815.cn/2020/04/21/summary/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</id>
+    <published>2020-04-20T16:00:00.000Z</published>
+    <updated>2020-04-23T06:43:49.803Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="设计模式-工厂模式"><a href="#设计模式-工厂模式" class="headerlink" title="设计模式-工厂模式"></a>设计模式-工厂模式</h1>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;设计模式-工厂模式&quot;&gt;&lt;a href=&quot;#设计模式-工厂模式&quot; class=&quot;headerlink&quot; title=&quot;设计模式-工厂模式&quot;&gt;&lt;/a&gt;设计模式-工厂模式&lt;/h1&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="设计模式" scheme="http://blog.loveyx815.cn/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    
+    
+      <category term="设计模式" scheme="http://blog.loveyx815.cn/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
+    
+  </entry>
+  
+  <entry>
     <title>Java泛型设计</title>
     <link href="http://blog.loveyx815.cn/2020/04/21/summary/Java%E6%B3%9B%E5%9E%8B%E8%AE%BE%E8%AE%A1/"/>
     <id>http://blog.loveyx815.cn/2020/04/21/summary/Java%E6%B3%9B%E5%9E%8B%E8%AE%BE%E8%AE%A1/</id>
@@ -158,32 +215,6 @@
     
     
       <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>设计模式-工厂模式</title>
-    <link href="http://blog.loveyx815.cn/2020/04/21/summary/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/"/>
-    <id>http://blog.loveyx815.cn/2020/04/21/summary/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F/</id>
-    <published>2020-04-20T16:00:00.000Z</published>
-    <updated>2020-04-23T06:43:49.803Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="设计模式-工厂模式"><a href="#设计模式-工厂模式" class="headerlink" title="设计模式-工厂模式"></a>设计模式-工厂模式</h1>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;设计模式-工厂模式&quot;&gt;&lt;a href=&quot;#设计模式-工厂模式&quot; class=&quot;headerlink&quot; title=&quot;设计模式-工厂模式&quot;&gt;&lt;/a&gt;设计模式-工厂模式&lt;/h1&gt;
-      
-    
-    </summary>
-    
-    
-      <category term="设计模式" scheme="http://blog.loveyx815.cn/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
-    
-    
-      <category term="设计模式" scheme="http://blog.loveyx815.cn/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/"/>
     
   </entry>
   
@@ -237,19 +268,20 @@
   </entry>
   
   <entry>
-    <title>String、StringBuilder做为实参在方法中修改字符串值的问题</title>
-    <link href="http://blog.loveyx815.cn/2020/04/19/String%E3%80%81StringBuilder%E5%81%9A%E4%B8%BA%E5%AE%9E%E5%8F%82%E5%9C%A8%E6%96%B9%E6%B3%95%E4%B8%AD%E4%BF%AE%E6%94%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC%E7%9A%84%E9%97%AE%E9%A2%98/"/>
-    <id>http://blog.loveyx815.cn/2020/04/19/String%E3%80%81StringBuilder%E5%81%9A%E4%B8%BA%E5%AE%9E%E5%8F%82%E5%9C%A8%E6%96%B9%E6%B3%95%E4%B8%AD%E4%BF%AE%E6%94%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC%E7%9A%84%E9%97%AE%E9%A2%98/</id>
+    <title>maven项目pom.xml报错</title>
+    <link href="http://blog.loveyx815.cn/2020/04/19/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/"/>
+    <id>http://blog.loveyx815.cn/2020/04/19/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/</id>
     <published>2020-04-18T16:00:00.000Z</published>
-    <updated>2020-04-19T11:09:06.526Z</updated>
+    <updated>2020-04-19T11:09:08.835Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="String、StringBuilder做为实参在方法中修改字符串值的问题"><a href="#String、StringBuilder做为实参在方法中修改字符串值的问题" class="headerlink" title="String、StringBuilder做为实参在方法中修改字符串值的问题"></a>String、StringBuilder做为实参在方法中修改字符串值的问题</h1><blockquote><p>场景介绍：需要在一个方法中同时修改两个字符串的值，因为不想传回一个数组，所以就尝试下直接修改字符串对象（地址引用）</p></blockquote><ul><li>下面介绍下几种修改方式：</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(String originStr)</span></span>&#123;</span><br><span class="line">     originStr=<span class="keyword">new</span> String(<span class="string">"str1 change"</span>);</span><br><span class="line"> &#125;</span><br><span class="line"> main()&#123;</span><br><span class="line">String str1=<span class="string">"I am str1"</span>;</span><br><span class="line">      changeString(str1);</span><br><span class="line">      System.out.println(str1);<span class="comment">//输出I am str1</span></span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(String originStr)</span></span>&#123;</span><br><span class="line">     originStr=<span class="string">"str2 change"</span>;</span><br><span class="line"> &#125;</span><br><span class="line"> main()&#123;</span><br><span class="line">String str2=<span class="string">"I am str2"</span>;</span><br><span class="line">      changeString(str2);</span><br><span class="line">      System.out.println(str2);<span class="comment">//输出I am str2</span></span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure><p>上面两种方式是直接传一个String对象，第一个是直接让形参指向新的对象，结果是方法内改变的值不是影响到实参；第二个是让形参指向一个字符串常量，结果同第一种是一样的。</p><blockquote><p>因为在Java中，参数传递分为两种。一个是基本类型的值引用，这个就不多说了；还有个就是对象引用，而对象引用实际上是把存储在JVM栈区的对象引用的数据拷贝了一份。所以当你在方法内部将该对象拷贝的引用重新指向新的地址对实参是没有影响的。</p></blockquote><p>这是引用拷贝时的示意图</p><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225234124932.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><p>接着拷贝后的originStr指向新的对象<figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225234402297.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><br>可见str1的引用都没有改变，所以这样是不能改变String对象的。</p><blockquote><p>接下来说所第二种为什么也不行，也就是在方法内部不重新为对象引用指向新的对象地址，而是直接给字符串赋值。先来看看String内部是怎么得构造的。</p></blockquote><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">String</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span>, <span class="title">Comparable</span>&lt;<span class="title">String</span>&gt;, <span class="title">CharSequence</span> </span>&#123;</span><br><span class="line">    <span class="comment">/** The value is used for character storage. */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">char</span> value[];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Cache the hash code for the string */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> hash; <span class="comment">// Default to 0</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/** use serialVersionUID from JDK 1.0.2 for interoperability */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">6849794470754667710L</span>;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><blockquote><p><strong>String类</strong>是一个被final类，也就是它是不能被继承和更改的。里面用一个char数组维护他的字符，所以我们使用的字符串都是里面的char数组转化而来，而这个char[] value也是被final修饰过的。所以String对象具有不能被修改的属性。如下图：</p></blockquote><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225235627939.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><blockquote><p>即使你在方法内部使用的将一个String对象拷贝引用originStr指向一个字符串常量”new str1”，他也是拷贝引用去指向字符串常量池中某一块地址，所以依旧还是不能影响到实参的字符串对象值。</p></blockquote><ul><li>最后是使用了StringBuilder作为参数，在方法内部修改StringBuilder引用指向内存的数据，实现在方法中直接修改字符串的值。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(StringBuilder originStr)</span></span>&#123;</span><br><span class="line">    originStr.replace(<span class="number">0</span>,originStr.length(),<span class="string">"str1 change"</span>);</span><br><span class="line">&#125;</span><br><span class="line">main()&#123;</span><br><span class="line">StringBuilder sb1=<span class="keyword">new</span> StringBuilder(<span class="string">"I am sb1"</span>);</span><br><span class="line">     changeString(sb1);</span><br><span class="line">     System.out.println(sb1);<span class="comment">//输出str1 change</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></li></ul>]]></content>
+    <content type="html"><![CDATA[<h1 id="maven项目pom-xml报错"><a href="#maven项目pom-xml报错" class="headerlink" title="maven项目pom.xml报错"></a>maven项目pom.xml报错</h1><blockquote><p>expected START_TAG or END_TAG not TEXT (position: TEXT seen …</dependency>\ua0\r\n &lt;d… @60:11) less… (Ctrl+F1)<br>Inspection info: Inspects a Maven model for resolution problems.</p></blockquote><p>  这种就是从别的地方复制粘贴的dependency时候有空格存在，导致文件识别不了，用IDE查找下空格的位置，删除就可以解决</p>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;h1 id=&quot;String、StringBuilder做为实参在方法中修改字符串值的问题&quot;&gt;&lt;a href=&quot;#String、StringBuilder做为实参在方法中修改字符串值的问题&quot; class=&quot;headerlink&quot; title=&quot;String、StringBuild
+        &lt;h1 id=&quot;maven项目pom-xml报错&quot;&gt;&lt;a href=&quot;#maven项目pom-xml报错&quot; class=&quot;headerlink&quot; title=&quot;maven项目pom.xml报错&quot;&gt;&lt;/a&gt;maven项目pom.xml报错&lt;/h1&gt;&lt;blockquote&gt;
+&lt;p&gt;e
       
     
     </summary>
@@ -260,9 +292,7 @@
     
       <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
     
-      <category term="源码分析" scheme="http://blog.loveyx815.cn/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
-    
-      <category term="字符串" scheme="http://blog.loveyx815.cn/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
+      <category term="maven" scheme="http://blog.loveyx815.cn/tags/maven/"/>
     
   </entry>
   
@@ -297,20 +327,19 @@
   </entry>
   
   <entry>
-    <title>maven项目pom.xml报错</title>
-    <link href="http://blog.loveyx815.cn/2020/04/19/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/"/>
-    <id>http://blog.loveyx815.cn/2020/04/19/maven%E9%A1%B9%E7%9B%AEpom.xml%E6%8A%A5%E9%94%99/</id>
+    <title>String、StringBuilder做为实参在方法中修改字符串值的问题</title>
+    <link href="http://blog.loveyx815.cn/2020/04/19/String%E3%80%81StringBuilder%E5%81%9A%E4%B8%BA%E5%AE%9E%E5%8F%82%E5%9C%A8%E6%96%B9%E6%B3%95%E4%B8%AD%E4%BF%AE%E6%94%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC%E7%9A%84%E9%97%AE%E9%A2%98/"/>
+    <id>http://blog.loveyx815.cn/2020/04/19/String%E3%80%81StringBuilder%E5%81%9A%E4%B8%BA%E5%AE%9E%E5%8F%82%E5%9C%A8%E6%96%B9%E6%B3%95%E4%B8%AD%E4%BF%AE%E6%94%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC%E7%9A%84%E9%97%AE%E9%A2%98/</id>
     <published>2020-04-18T16:00:00.000Z</published>
-    <updated>2020-04-19T11:09:08.835Z</updated>
+    <updated>2020-04-19T11:09:06.526Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="maven项目pom-xml报错"><a href="#maven项目pom-xml报错" class="headerlink" title="maven项目pom.xml报错"></a>maven项目pom.xml报错</h1><blockquote><p>expected START_TAG or END_TAG not TEXT (position: TEXT seen …</dependency>\ua0\r\n &lt;d… @60:11) less… (Ctrl+F1)<br>Inspection info: Inspects a Maven model for resolution problems.</p></blockquote><p>  这种就是从别的地方复制粘贴的dependency时候有空格存在，导致文件识别不了，用IDE查找下空格的位置，删除就可以解决</p>]]></content>
+    <content type="html"><![CDATA[<h1 id="String、StringBuilder做为实参在方法中修改字符串值的问题"><a href="#String、StringBuilder做为实参在方法中修改字符串值的问题" class="headerlink" title="String、StringBuilder做为实参在方法中修改字符串值的问题"></a>String、StringBuilder做为实参在方法中修改字符串值的问题</h1><blockquote><p>场景介绍：需要在一个方法中同时修改两个字符串的值，因为不想传回一个数组，所以就尝试下直接修改字符串对象（地址引用）</p></blockquote><ul><li>下面介绍下几种修改方式：</li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(String originStr)</span></span>&#123;</span><br><span class="line">     originStr=<span class="keyword">new</span> String(<span class="string">"str1 change"</span>);</span><br><span class="line"> &#125;</span><br><span class="line"> main()&#123;</span><br><span class="line">String str1=<span class="string">"I am str1"</span>;</span><br><span class="line">      changeString(str1);</span><br><span class="line">      System.out.println(str1);<span class="comment">//输出I am str1</span></span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(String originStr)</span></span>&#123;</span><br><span class="line">     originStr=<span class="string">"str2 change"</span>;</span><br><span class="line"> &#125;</span><br><span class="line"> main()&#123;</span><br><span class="line">String str2=<span class="string">"I am str2"</span>;</span><br><span class="line">      changeString(str2);</span><br><span class="line">      System.out.println(str2);<span class="comment">//输出I am str2</span></span><br><span class="line">     &#125;</span><br></pre></td></tr></table></figure><p>上面两种方式是直接传一个String对象，第一个是直接让形参指向新的对象，结果是方法内改变的值不是影响到实参；第二个是让形参指向一个字符串常量，结果同第一种是一样的。</p><blockquote><p>因为在Java中，参数传递分为两种。一个是基本类型的值引用，这个就不多说了；还有个就是对象引用，而对象引用实际上是把存储在JVM栈区的对象引用的数据拷贝了一份。所以当你在方法内部将该对象拷贝的引用重新指向新的地址对实参是没有影响的。</p></blockquote><p>这是引用拷贝时的示意图</p><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225234124932.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><p>接着拷贝后的originStr指向新的对象<figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225234402297.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><br>可见str1的引用都没有改变，所以这样是不能改变String对象的。</p><blockquote><p>接下来说所第二种为什么也不行，也就是在方法内部不重新为对象引用指向新的对象地址，而是直接给字符串赋值。先来看看String内部是怎么得构造的。</p></blockquote><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">String</span></span></span><br><span class="line"><span class="class">    <span class="keyword">implements</span> <span class="title">java</span>.<span class="title">io</span>.<span class="title">Serializable</span>, <span class="title">Comparable</span>&lt;<span class="title">String</span>&gt;, <span class="title">CharSequence</span> </span>&#123;</span><br><span class="line">    <span class="comment">/** The value is used for character storage. */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">char</span> value[];</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Cache the hash code for the string */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> hash; <span class="comment">// Default to 0</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/** use serialVersionUID from JDK 1.0.2 for interoperability */</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">6849794470754667710L</span>;</span><br><span class="line">......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><blockquote><p><strong>String类</strong>是一个被final类，也就是它是不能被继承和更改的。里面用一个char数组维护他的字符，所以我们使用的字符串都是里面的char数组转化而来，而这个char[] value也是被final修饰过的。所以String对象具有不能被修改的属性。如下图：</p></blockquote><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20191225235627939.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><blockquote><p>即使你在方法内部使用的将一个String对象拷贝引用originStr指向一个字符串常量”new str1”，他也是拷贝引用去指向字符串常量池中某一块地址，所以依旧还是不能影响到实参的字符串对象值。</p></blockquote><ul><li>最后是使用了StringBuilder作为参数，在方法内部修改StringBuilder引用指向内存的数据，实现在方法中直接修改字符串的值。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">changeString</span><span class="params">(StringBuilder originStr)</span></span>&#123;</span><br><span class="line">    originStr.replace(<span class="number">0</span>,originStr.length(),<span class="string">"str1 change"</span>);</span><br><span class="line">&#125;</span><br><span class="line">main()&#123;</span><br><span class="line">StringBuilder sb1=<span class="keyword">new</span> StringBuilder(<span class="string">"I am sb1"</span>);</span><br><span class="line">     changeString(sb1);</span><br><span class="line">     System.out.println(sb1);<span class="comment">//输出str1 change</span></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></li></ul>]]></content>
     
     <summary type="html">
     
       
       
-        &lt;h1 id=&quot;maven项目pom-xml报错&quot;&gt;&lt;a href=&quot;#maven项目pom-xml报错&quot; class=&quot;headerlink&quot; title=&quot;maven项目pom.xml报错&quot;&gt;&lt;/a&gt;maven项目pom.xml报错&lt;/h1&gt;&lt;blockquote&gt;
-&lt;p&gt;e
+        &lt;h1 id=&quot;String、StringBuilder做为实参在方法中修改字符串值的问题&quot;&gt;&lt;a href=&quot;#String、StringBuilder做为实参在方法中修改字符串值的问题&quot; class=&quot;headerlink&quot; title=&quot;String、StringBuild
       
     
     </summary>
@@ -321,7 +350,9 @@
     
       <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
     
-      <category term="maven" scheme="http://blog.loveyx815.cn/tags/maven/"/>
+      <category term="源码分析" scheme="http://blog.loveyx815.cn/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/"/>
+    
+      <category term="字符串" scheme="http://blog.loveyx815.cn/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/"/>
     
   </entry>
   
@@ -449,63 +480,6 @@
   </entry>
   
   <entry>
-    <title>Configuration注解中引用bean</title>
-    <link href="http://blog.loveyx815.cn/2020/04/19/summary/@Configuration%E6%B3%A8%E8%A7%A3%E4%B8%AD%E5%BC%95%E7%94%A8bean/"/>
-    <id>http://blog.loveyx815.cn/2020/04/19/summary/@Configuration%E6%B3%A8%E8%A7%A3%E4%B8%AD%E5%BC%95%E7%94%A8bean/</id>
-    <published>2020-04-18T16:00:00.000Z</published>
-    <updated>2020-04-19T09:21:16.163Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="Configuration注解中引用bean"><a href="#Configuration注解中引用bean" class="headerlink" title="@Configuration注解中引用bean"></a>@Configuration注解中引用bean</h1><blockquote><p>背景介绍：需要在一个配置类里面引用一个bean</p></blockquote><p>直接上代码</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(value = <span class="string">"cn.loveyx815.rocketmq.mqtransaction.message"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MQConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"prooducer"</span>, initMethod = <span class="string">"init"</span>, destroyMethod = <span class="string">"destory"</span>)</span><br><span class="line">    <span class="meta">@DependsOn</span>(value = <span class="string">"userLocalTransactionListener"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> TransactionSpringProducer <span class="title">transactionSpringProducer</span><span class="params">(UserLocalTransactionListener userLocalTransactionListener)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TransactionSpringProducer(<span class="string">"transaction_spring_producer_group"</span>, Consts.MQ_ADDR, <span class="number">2</span>, <span class="number">5</span>, <span class="number">1000</span>, userLocalTransactionListener);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"consumer"</span>, initMethod = <span class="string">"init"</span>, destroyMethod = <span class="string">"destory"</span>)</span><br><span class="line">    <span class="meta">@DependsOn</span>(value = <span class="string">"transactionMessageListener"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> TransactionSpringConsumer <span class="title">transactionSpringConsumer</span><span class="params">( TransactionMessageListener transactionMessageListener)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TransactionSpringConsumer(<span class="string">"transaction_consumer_group4"</span>, Consts.MQ_ADDR, <span class="string">"distributed_transaction_spring_topic"</span>, transactionMessageListener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p><strong>transactionMessageListener</strong>和<strong>userLocalTransactionListener</strong>这两个bean是被放入在Spring容器中，通过注解 <strong>Component</strong> 生成。<br>正确的做法是直接在你想要调用的方法里直接传入对应的bean即可。</p><p><strong>——————————————————————————————-</strong><br>下面是错误的做法：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ComponentScan</span>(value = <span class="string">"cn.loveyx815.rocketmq.mqtransaction.message"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MQConfig</span> </span>&#123;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> UserLocalTransactionListener userLocalTransactionListener;</span><br><span class="line"><span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> TransactionMessageListener transactionMessageListener;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"prooducer"</span>, initMethod = <span class="string">"init"</span>, destroyMethod = <span class="string">"destory"</span>)</span><br><span class="line">    <span class="meta">@DependsOn</span>(value = <span class="string">"userLocalTransactionListener"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> TransactionSpringProducer <span class="title">transactionSpringProducer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TransactionSpringProducer(<span class="string">"transaction_spring_producer_group"</span>, Consts.MQ_ADDR, <span class="number">2</span>, <span class="number">5</span>, <span class="number">1000</span>, userLocalTransactionListener);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span>(name = <span class="string">"consumer"</span>, initMethod = <span class="string">"init"</span>, destroyMethod = <span class="string">"destory"</span>)</span><br><span class="line">    <span class="meta">@DependsOn</span>(value = <span class="string">"transactionMessageListener"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> TransactionSpringConsumer <span class="title">transactionSpringConsumer</span><span class="params">( )</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TransactionSpringConsumer(<span class="string">"transaction_consumer_group4"</span>, Consts.MQ_ADDR, <span class="string">"distributed_transaction_spring_topic"</span>, transactionMessageListener);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>与正确的不同的是下面的是自己在里面手动注入了这两个bean，去掉了方法参数。而结果得到的两个bean都为null</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;Configuration注解中引用bean&quot;&gt;&lt;a href=&quot;#Configuration注解中引用bean&quot; class=&quot;headerlink&quot; title=&quot;@Configuration注解中引用bean&quot;&gt;&lt;/a&gt;@Configuration注解中引用
-      
-    
-    </summary>
-    
-    
-      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
-    
-    
-      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
-    
-      <category term="SpringBoot" scheme="http://blog.loveyx815.cn/tags/SpringBoot/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>Redis缓存分页数据</title>
-    <link href="http://blog.loveyx815.cn/2020/04/19/%E7%BC%93%E5%AD%98%E7%9B%B8%E5%85%B3/Redis%E7%BC%93%E5%AD%98%E5%88%86%E9%A1%B5%E6%95%B0%E6%8D%AE/"/>
-    <id>http://blog.loveyx815.cn/2020/04/19/%E7%BC%93%E5%AD%98%E7%9B%B8%E5%85%B3/Redis%E7%BC%93%E5%AD%98%E5%88%86%E9%A1%B5%E6%95%B0%E6%8D%AE/</id>
-    <published>2020-04-18T16:00:00.000Z</published>
-    <updated>2020-04-19T09:03:22.255Z</updated>
-    
-    <content type="html"><![CDATA[<h1 id="用Redis缓存Web网页的分页数据"><a href="#用Redis缓存Web网页的分页数据" class="headerlink" title="用Redis缓存Web网页的分页数据"></a>用Redis缓存Web网页的分页数据</h1><ul><li><strong>业务场景：</strong>把学生选课系统中学生群体数据放入缓存中，减少对数据库的访问，提高系统的负载能力。</li><li><strong>实现思路：</strong>1.在用户首次登陆选课系统时，会先判断Redis缓存中是否有该缓存（这里使用的是Redis的zset数据结构来实现）。</li><li><strong>补充：</strong>由于zset结构本身没有判断键是否存在的命令，我这里是用的是zcard(key)。zcard函数返回的是这个键对应的缓存集中的条数。</li></ul><blockquote><p><strong>zset</strong>数据结构补充：</p><p>Redis中存放数据都是将数据串行化放入内存中，所以将对象串行化有两种方式：流串行和JSON</p><ol><li><p><strong>zadd(key,score,members)</strong> 向key的键下面添加元素，排序方式默认是以score的字典升序，score是double类型的值，不能传错了。这里的key可以认为是指定 的一个有序Set,通过zset的操作可以自动更新有序Set的排序 <figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="zset数据结构](https://img-blog.csdn.net/20180816180026172?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)![点击并拖拽以移动" title="">                </div>                <div class="image-caption">zset数据结构](https://img-blog.csdn.net/20180816180026172?watermark/2/text/aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70)![点击并拖拽以移动</div>            </figure></p></li><li><p><strong>zrem(key,members)</strong> 当匹配到key缓存中有相同的members（字符串）时，就删除对应的记录</p></li><li><p><strong>zrange(key,start,end)</strong></p><p> 获取索引区间的成员(按分数排序)</p><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">1）[start,end]&#x3D;[0,-1] -1比表示最后一个元素的索引</span><br><span class="line">    zrange(key,0,-1)代表所有成员 </span><br><span class="line">2）end越界，显示从start开始到最后一个成员 </span><br><span class="line">3）start，end都越界，返回nil</span><br></pre></td></tr></table></figure><p><img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动"></p></li></ol><ol start="4"><li><p><strong>zcard(key)</strong> 获取key缓存中的所有元素的记录条数</p></li><li><p><strong>zscore(key,members)</strong> 获取对应members的score并返回，若不存在则返回null</p></li><li><p><strong>zcard(key)</strong> 获取key缓存中的所有元素的记录</p></li></ol></blockquote><p> 最后附上部分代码（有点糙，，）</p><p>页面初始化和分页：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment"> * 使用Redis有序SET进行缓存，可以进行排序</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">total = (<span class="keyword">long</span>) redis.zcard(key);</span><br><span class="line"><span class="keyword">if</span>(total&lt;=<span class="number">0</span>)&#123;<span class="comment">//如果元素个数《=0，表示key中没有缓存，从数据库中拿数据放入缓存》</span></span><br><span class="line">list = service.findAllStudent();</span><br><span class="line">redis.saveCache(<span class="string">"student_rank"</span>, list);</span><br><span class="line"><span class="comment">//page = service.selectAllByPage(searchParams.getSearchMap(),pageRequest);</span></span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> curruntindex=pageRequest.getPageNumber() * pageRequest.getPageSize();<span class="comment">//分页开始索引</span></span><br><span class="line"><span class="keyword">int</span> endindex=curruntindex+pageRequest.getPageSize()-<span class="number">1</span>;<span class="comment">//分页结束索引</span></span><br><span class="line"><span class="keyword">if</span>(endindex&gt;total)&#123;</span><br><span class="line">endindex=total.intValue();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//total = (long) redis.zcard(key);</span></span><br><span class="line">sublist=redis.getPageCache(key,curruntindex,endindex);</span><br><span class="line">page = service.findAllByPageRedis( searchParams.getSearchMap(), pageRequest, sublist,total);<span class="comment">//返回页面Bean</span></span><br></pre></td></tr></table></figure><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动" title="">                </div>                <div class="image-caption">点击并拖拽以移动</div>            </figure><p>对缓存更新数据：</p><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">         <span class="comment">/*</span></span><br><span class="line"><span class="comment">  * 对缓存更新操作</span></span><br><span class="line"><span class="comment">  * 先删除匹配对的缓存中的数据，在新增数据</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> List&lt;Student&gt; student=findByStudentno(entity.getStudentno());</span><br><span class="line"> member=gson.toJson(student.get(<span class="number">0</span>));</span><br><span class="line"> <span class="keyword">if</span> (redis.zscore(key, member)!=<span class="keyword">null</span>) &#123;<span class="comment">//缓存中若没有member则返回null，否则返回                </span></span><br><span class="line">             redis.zrem(key, member);         <span class="comment">//member对应的Double对象</span></span><br><span class="line">&#125;</span><br><span class="line"> member=gson.toJson(entity);</span><br><span class="line"> redis.zadd(key, Long.valueOf(entity.getStudentno()), member);</span><br></pre></td></tr></table></figure><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="data:image/gif;base64,R0lGODlhAQABAPABAP///wAAACH5BAEKAAAALAAAAAABAAEAAAICRAEAOw==" alt="点击并拖拽以移动" title="">                </div>                <div class="image-caption">点击并拖拽以移动</div>            </figure><p>现就到这了，后续再有想法再来更新</p>]]></content>
-    
-    <summary type="html">
-    
-      
-      
-        &lt;h1 id=&quot;用Redis缓存Web网页的分页数据&quot;&gt;&lt;a href=&quot;#用Redis缓存Web网页的分页数据&quot; class=&quot;headerlink&quot; title=&quot;用Redis缓存Web网页的分页数据&quot;&gt;&lt;/a&gt;用Redis缓存Web网页的分页数据&lt;/h1&gt;&lt;ul&gt;
-&lt;li&gt;
-      
-    
-    </summary>
-    
-    
-      <category term="分布式" scheme="http://blog.loveyx815.cn/categories/%E5%88%86%E5%B8%83%E5%BC%8F/"/>
-    
-    
-      <category term="Redis" scheme="http://blog.loveyx815.cn/tags/Redis/"/>
-    
-      <category term="缓存" scheme="http://blog.loveyx815.cn/tags/%E7%BC%93%E5%AD%98/"/>
-    
-  </entry>
-  
-  <entry>
     <title>Docker从入坑到放弃</title>
     <link href="http://blog.loveyx815.cn/2020/04/19/Docker/Docker%E4%BB%8E%E5%85%A5%E5%9D%91%E5%88%B0%E6%94%BE%E5%BC%83/"/>
     <id>http://blog.loveyx815.cn/2020/04/19/Docker/Docker%E4%BB%8E%E5%85%A5%E5%9D%91%E5%88%B0%E6%94%BE%E5%BC%83/</id>
@@ -529,6 +503,34 @@
     
     
       <category term="Docker" scheme="http://blog.loveyx815.cn/tags/Docker/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>Java异常-受查与非受查</title>
+    <link href="http://blog.loveyx815.cn/2020/04/19/summary/Java%E5%BC%82%E5%B8%B8/"/>
+    <id>http://blog.loveyx815.cn/2020/04/19/summary/Java%E5%BC%82%E5%B8%B8/</id>
+    <published>2020-04-18T16:00:00.000Z</published>
+    <updated>2020-04-19T07:45:37.818Z</updated>
+    
+    <content type="html"><![CDATA[<h1 id="Java异常-受查与非受查"><a href="#Java异常-受查与非受查" class="headerlink" title="Java异常-受查与非受查"></a>Java异常-受查与非受查</h1><figure class="image-bubble">                <div class="img-lightbox">                    <div class="overlay"></div>                    <img src="https://img-blog.csdnimg.cn/20200419145601997.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0d1aXRhcmY=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述" title="">                </div>                <div class="image-caption">在这里插入图片描述</div>            </figure><blockquote><p>所有的异常都是由Throwable继承而来，下级分为Error和Exception</p></blockquote><ul><li><p><strong>Error</strong></p><p>Error表示Java运行时系统的内部错误和资源耗尽错误，不应该抛出该类型的错误，只能通知用户，尽力安全关闭程序。</p></li><li><p><strong>Exception</strong></p><p>该分支派生出RuntimeException和其他异常（如I/O错误之类）</p></li></ul><ol><li><strong>受查与非受查异常</strong></li></ol><ul><li><p><strong>非受查异常</strong></p><blockquote><p> 派生于Error或RuntimeException类的所有异常</p></blockquote></li><li><p><strong>受查异常</strong></p><blockquote><p>其他所有的异常称为受查异常</p></blockquote></li></ul><p>一个方法必须声明所有可能抛出的受查异常，非受查异常要么不可控制（Error），要么就应该避免（RuntimeException）。当方法没有声明所有可能发生的受查异常，编译器会发出一个错误消息。</p><ul><li><p><strong>try-catch</strong><br>除了常用的try-catch-finally之外，还有一种带资源的try语句</p><blockquote><p>若资源属于一个实现了AutoCloseable接口的类，该接口有个close方法 void close()  throws Exception;<br>整体的带资源的try语句可写成如下代码：</p></blockquote></li></ul><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span>(Resource res = ...)&#123;</span><br><span class="line">    <span class="keyword">do</span> something;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><p>当try语句退出或者发生异常时，会自动调用res.close()，相当于调用了finally</p>]]></content>
+    
+    <summary type="html">
+    
+      
+      
+        &lt;h1 id=&quot;Java异常-受查与非受查&quot;&gt;&lt;a href=&quot;#Java异常-受查与非受查&quot; class=&quot;headerlink&quot; title=&quot;Java异常-受查与非受查&quot;&gt;&lt;/a&gt;Java异常-受查与非受查&lt;/h1&gt;&lt;figure class=&quot;image-bubble&quot;&gt;
+      
+    
+    </summary>
+    
+    
+      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/categories/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    
+    
+      <category term="Java开发总结" scheme="http://blog.loveyx815.cn/tags/Java%E5%BC%80%E5%8F%91%E6%80%BB%E7%BB%93/"/>
+    
+      <category term="异常处理" scheme="http://blog.loveyx815.cn/tags/%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/"/>
     
   </entry>
   
